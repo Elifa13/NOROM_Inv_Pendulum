@@ -5,6 +5,9 @@ paths:
   raw_dir: "data/raw"
   interim_dir: "data/interim"
 
+drive:
+  folder_id: "1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6"
+
 experiment:
   practice_trials: 3
   measurement_trials: 50
@@ -27,8 +30,8 @@ physics:
   pole_length_m: 1.0
 
 qc:
-  dead_input_threshold: 0.0   # max(|input_raw|)==0 -> dead controller
-  min_fps: null               # gercek veri gelince doldurulacak
+  dead_input_threshold: 0.0
+  min_fps: null
   low_activity_threshold: null
   velocity_correlation_warn: 0.99
   dt_tolerance: 0.001

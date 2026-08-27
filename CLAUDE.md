@@ -8,9 +8,11 @@ Cart-pole dengeleme görevinde görsel noise seviyelerinin motor öğrenmeye etk
 
 Veriyi ben analiz ediyorum, deneyi ben yapmıyorum, tasarımı değiştiremem. Kayıt tarafına sadece "şu alanı da kaydedin" diyebiliyorum (bkz. `Documentation/Veri_Kayit_Istekleri.md`).
 
-## UYARI: mevcut veri gerçek katılimci degil
+## Veri durumu
 
-`Data Analysis/data/raw/` altindaki P001 ve P002 smoke test. Oyunun çalışıp çalışmadığını, veri gelip gelmediğini kontrol etmek için yapılmış denemeler. Kişi değiller. Bu veriden performans, öğrenme, noise etkisi, floor/ceiling gibi hiçbir davranışsal sonuç çıkarılmaz. Test eden kişi joystick'i bir kenara bırakmış olabilir, bir sürü masum açıklaması var. Bu veri sadece kodun uçtan uca çalıştığını doğrulamak için kullanılır.
+2026-08-27 itibariyle Drive'daki P001–P005 **gerçek katılımcı**. Her biri tek oturum, 53 trial (3 practice + 50 measurement). Eski smoke test verisi (P001/P002) silindi, artık Drive'da yok.
+
+Yani davranışsal analiz yapılabilir. Tek çekince aşağıdaki randomizasyon sorunu: beş katılımcı da aynı koşul sırasını ve aynı noise_seed dizisini paylaşıyor (bkz. "Veride görülen sorunlar" §1). Sıra etkisi katılımcılar arasında dengelenmemiş durumda, koşul karşılaştırmasında bu akılda tutulmalı.
 
 ## Veri
 
@@ -18,7 +20,7 @@ Veriyi ben analiz ediyorum, deneyi ben yapmıyorum, tasarımı değiştiremem. K
 
 Google Drive klasörü `Pendulum_Data`, id `1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6`
 
-Veri `rclone copy` ile Drive'dan çekilecek, repoya commit edilmeyecek. `rclone sync` DEĞİL — sync hedefte fazladan olanı siler, Drive geçici olarak eksikse ham veriyi kaybederiz. Remote: `root_folder_id` olarak Drive klasör id'si, scope `drive.readonly`.
+Klasör "bağlantıya sahip herkes" olarak paylaşıldığı için kimlik doğrulama yok: API anahtarı, OAuth, `client_secrets.json`, `rclone config` — hiçbiri gerekmiyor. `src/drive_sync.py` `gdown` ile klasörü listeler, sadece beklenen üç dosya tipini indirir. Var olan dosya tekrar indirilmez, yerelde olup Drive'da olmayan hiçbir şey silinmez (sync değil, copy semantiği). Veri repoya commit edilmez.
 
 ### Klasör yapısı
 
@@ -119,14 +121,15 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 | 05 | Learning | Pilotta işi varyans/güç tahmini; koşullar arası öğrenme karşılaştırması DEĞİL |
 | 06 | Noise kararı | Koşul × metrik tablosu, U-şekil kontrolü, aday seçimi |
 
-02 var çünkü 03 ve 04 aynı türetmeyi iki kere yapmasın. 04, 05'ten önce çünkü learning kriteri action timing'i girdi olarak kullanıyor. Drive'dan veri çekme notebook değil, rclone scripti.
+02 var çünkü 03 ve 04 aynı türetmeyi iki kere yapmasın. 04, 05'ten önce çünkü learning kriteri action timing'i girdi olarak kullanıyor. Drive'dan veri çekme NB01'in ilk hücresi (`src/drive_sync.py`).
 
 ## Notebook 01 içeriği (sıradaki iş)
 
+0. **Drive'dan çek**: `sync_data`, var olanı atlar
 1. **Keşif ve yükleme**: oturumları bul, üç dosyayı oku, sample düzeyi ve trial düzeyi iki tablo üret
 2. **Yapısal bütünlük**: dosya varlığı, trial sayıları (3 practice + 50 measurement bekleniyor), koşul dengesi (her turda 5 koşul × 1), metadata alanları
 3. **Zaman ve örnekleme**: dt vs fixed_delta_time_s, time reversal, gap, sample_index atlaması, duplicate, NaN, açı aralığı (−180°..+180°)
-4. **Sinyal akıl sağlığı**: hızlar pozisyon türeviyle tutuyor mu, force = input_applied × max_force_n mı, fall_event sadece ilk adımda mı, phase/is_resetting tutarlı mı
+4. **Sinyal akıl sağlığı**: hızlar pozisyon türeviyle tutuyor mu, force = input_applied × max_force_n mı, fall_event sadece ilk adımda mı, phase/is_resetting tutarlı mı. Türev kontrolü kesintisiz `active` parçalarda ayrı yapılır — trial içinde düşüş olunca 1 s reset bloğu giriyor ve pole yeni başlangıç açısıyla devam ediyor; `phase == "active"` satırlarını uç uca eklemek sahte sıçrama üretir.
 5. **Trial geçerliliği**: valid_trial kolonuna GÜVENİLMEZ, kendi `qc_pass` ve `qc_flags` bayrağımız üretilir
 6. **Sample maskesi**: `analysis_include = (phase == "active") & (practice == 0) & qc_pass & (window_focused == 1)`. (is_resetting == 0 gereksiz, phase == "active" ile birebir aynı)
 7. **Format regresyon takibi**: `Veri_Kayit_Istekleri.md`'deki istenen alanlar geldi mi
@@ -148,18 +151,18 @@ Prosedür:
 4. Ana kriterler birbirine çok yakın çıkarsa RMS_theta ve control effort tie-breaker
 5. Seçilen sonucu katılımcı düzeyinde kontrol et: tek bir kişinin kötü performansından mı geliyor
 
-## Mevcut veride görülen, gerçek veride tekrar bakılacak şeyler
+## Veride görülen sorunlar
 
-Bunlar bulgu değil, soru. Masum açıklamaları olabilir. Önem sırasına göre:
+Önem sırasına göre. 1 ve 8 gerçek veride doğrulandı, geri kalanı hâlâ "bakılacak" listesinde:
 
-1. **randomizationSeed 12345'e sabitlenmiş** — P001 ve P002 aynı condition_order ve noise_seed dizisini paylaşıyor. Kalıcı olursa grup düzeyi analizi gerçekten tıkar, en önemli madde bu.
+1. **randomizationSeed 12345'e sabitlenmiş** — P001–P005'in beşi de aynı `condition_order` ve aynı `noise_seed` dizisini paylaşıyor. Beş katılımcıda da doğrulandı, tesadüf değil. Kalıcı olursa grup düzeyi analizi gerçekten tıkar, en önemli madde bu. NB01'de `shared_condition_order` ve `shared_randomization_seed` kontrolleri FAIL veriyor.
 2. **Reset satırlarında applied_force_n 0'a zorlanıyor** ama input_applied son değerinde kalıyor. Action timing analizi için sorun: sahte zero-crossing'ler üretiyor.
 3. **Reset'te hızlar tam sıfırlanmıyor** — Ludolph ikisinin de sıfır olmasını istiyor. Başlangıç koşulları karşılaştırılabilir olmuyor.
 4. **valid_trial her trial'da 1**, invalid_reason hiç dolmuyor (ölü controller trial'ları dahil).
 5. **Metadata'da eksik alanlar**: ekran boyutu/çözünürlük/izleme mesafesi, input deadzone, noise texture parametreleri, balance eşikleri. Tam liste: `Documentation/Veri_Kayit_Istekleri.md` §6.
 6. **within_bounds_time_s** failure limitini (60°/5 m) kullanıyor, her trial'da ~19.95 s çıkıyor; ayrı ve daha dar bir eşik seçilmeli.
 7. **Sample düzeyinde frame timing yok** — düşük öncelikli.
-8. **P001'de metadata.json yok**; P002'nin metadata'sında `config.participantId` yanlışlıkla "P001" yazıyor.
+8. **`config.participantId` hiç güncellenmiyor** — P002–P005'in metadata'sında da "P001" yazıyor. `participant_id` alanı doğru, sadece `config` bloğundaki kopya yanlış. NB01'de `config_participant_id` kontrolü WARN veriyor.
 
 ## Park state ve action tanımları
 
@@ -202,7 +205,8 @@ Düzeltici kuvvetin işareti veriden doğrulanmalı, varsayılmamalı.
 ## Veri kaynağı ve git
 
 Kaynak: Google Drive klasörü `Pendulum_Data`, id `1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6`
+drive link: https://drive.google.com/drive/folders/1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6
 
 Yapı: `Pendulum_Data/<participant>/<session>/` ve içinde üç dosya.
 
-Veri `rclone copy` ile Drive'dan çekilecek, repoya commit edilmeyecek. Kodu çalıştıran herkes aynı veriyi kendi diskine indirebiliyor, o yüzden git'te tutmaya gerek yok. rclone remote: `root_folder_id` olarak Drive klasör id'si, scope `drive.readonly`.
+Çekme: NB01'in "0. Drive'dan veri çek" hücresi, `sync_data(folder_id, RAW_DIR)`. Kimlik doğrulama yok — klasör herkese açık. Kodu çalıştıran herkes aynı veriyi kendi diskine indirebiliyor, o yüzden git'te tutmaya gerek yok.

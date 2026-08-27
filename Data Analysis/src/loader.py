@@ -7,15 +7,13 @@ import json
 import pandas as pd
 
 
-def discover_sessions(raw_dir: Path) -> list[dict]:
-    """raw_dir/<participant>/<session>/ yapisini tarar.
-
-    Doner: participant_id, session_id, session_dir,
-           has_metadata, has_timeseries, has_trial_summary,
-           measurement_trial_count
-    """
+def discover_sessions(raw_dir):
+    """raw_dir/<participant>/<session>/ yapisini tarar."""
     raw_dir = Path(raw_dir)
     sessions = []
+
+    if not raw_dir.exists():
+        return sessions
 
     for pid_dir in sorted(raw_dir.iterdir()):
         if not pid_dir.is_dir() or pid_dir.name.startswith("."):
@@ -40,33 +38,28 @@ def discover_sessions(raw_dir: Path) -> list[dict]:
                 except Exception:
                     pass
 
-            sessions.append(
-                {
-                    "participant_id": pid,
-                    "session_id": sid,
-                    "session_dir": sid_dir,
-                    "has_metadata": has_meta,
-                    "has_timeseries": has_ts,
-                    "has_trial_summary": has_sum,
-                    "measurement_trial_count": n_measurement,
-                }
-            )
+            sessions.append({
+                "participant_id": pid,
+                "session_id": sid,
+                "session_dir": sid_dir,
+                "has_metadata": has_meta,
+                "has_timeseries": has_ts,
+                "has_trial_summary": has_sum,
+                "measurement_trial_count": n_measurement,
+            })
 
     return sessions
 
 
-def select_sessions(
-    sessions: list[dict],
-) -> tuple[list[dict], list[dict]]:
-    """Her katilimci icin en cok measurement trial iceren oturumu sec.
-
-    Doner: (selected, incomplete)
-    """
-    by_pid: dict[str, list[dict]] = defaultdict(list)
+def select_sessions(sessions):
+    """Her katilimci icin en cok measurement trial iceren oturumu sec."""
+    by_pid = defaultdict(list)
     for s in sessions:
         by_pid[s["participant_id"]].append(s)
 
-    selected, incomplete = [], []
+    selected = []
+    incomplete = []
+
     for pid in sorted(by_pid):
         lst = sorted(
             by_pid[pid],
@@ -79,33 +72,7 @@ def select_sessions(
     return selected, incomplete
 
 
-def load_metadata(
-    session_dir: Path, pid: str, sid: str
-) -> dict | None:
-    path = session_dir / f"{pid}_{sid}_metadata.json"
-    if not path.exists():
-        return None
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def load_timeseries(
-    session_dir: Path, pid: str, sid: str
-) -> pd.DataFrame:
-    path = session_dir / f"{pid}_{sid}_timeseries.csv"
-    return pd.read_csv(path)
-
-
-def load_trial_summary(
-    session_dir: Path, pid: str, sid: str
-) -> pd.DataFrame:
-    path = session_dir / f"{pid}_{sid}_trial_summary.csv"
-    return pd.read_csv(path)
-
-
-def load_all(
-    raw_dir: Path,
-) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, dict], list[dict]]:
+def load_all(raw_dir):
     """Tum oturumlari yukle.
 
     Doner:
@@ -117,45 +84,53 @@ def load_all(
     sessions = discover_sessions(raw_dir)
     selected, incomplete = select_sessions(sessions)
 
-    sample_frames: list[pd.DataFrame] = []
-    trial_frames: list[pd.DataFrame] = []
-    metadata: dict[str, dict] = {}
-    session_report: list[dict] = []
+    sample_frames = []
+    trial_frames = []
+    metadata = {}
+    session_report = []
 
     for s in selected:
-        pid, sid, sdir = s["participant_id"], s["session_id"], s["session_dir"]
-        report: dict = {**s, "status": "selected", "warnings": []}
+        pid = s["participant_id"]
+        sid = s["session_id"]
+        sdir = s["session_dir"]
+        prefix = f"{pid}_{sid}"
+        report = {**s, "status": "selected", "warnings": []}
 
-        meta = load_metadata(sdir, pid, sid)
-        if meta is not None:
-            metadata[f"{pid}/{sid}"] = meta
+        # metadata
+        meta_path = sdir / f"{prefix}_metadata.json"
+        if meta_path.exists():
+            with open(meta_path, encoding="utf-8") as f:
+                metadata[f"{pid}/{sid}"] = json.load(f)
         else:
             report["warnings"].append("metadata.json eksik")
 
-        if s["has_timeseries"]:
-            sample_frames.append(load_timeseries(sdir, pid, sid))
+        # timeseries
+        ts_path = sdir / f"{prefix}_timeseries.csv"
+        if ts_path.exists():
+            sample_frames.append(pd.read_csv(ts_path))
 
-        if s["has_trial_summary"]:
-            df_tr = load_trial_summary(sdir, pid, sid)
+        # trial summary
+        sum_path = sdir / f"{prefix}_trial_summary.csv"
+        if sum_path.exists():
+            df_tr = pd.read_csv(sum_path)
             if len(df_tr) > 0:
                 trial_frames.append(df_tr)
             else:
-                report["warnings"].append("trial_summary bos (sadece header)")
+                report["warnings"].append("trial_summary bos")
 
         session_report.append(report)
 
     for s in incomplete:
         session_report.append({**s, "status": "incomplete", "warnings": []})
 
-    df_samples = (
-        pd.concat(sample_frames, ignore_index=True)
-        if sample_frames
-        else pd.DataFrame()
-    )
-    df_trials = (
-        pd.concat(trial_frames, ignore_index=True)
-        if trial_frames
-        else pd.DataFrame()
-    )
+    if sample_frames:
+        df_samples = pd.concat(sample_frames, ignore_index=True)
+    else:
+        df_samples = pd.DataFrame()
+
+    if trial_frames:
+        df_trials = pd.concat(trial_frames, ignore_index=True)
+    else:
+        df_trials = pd.DataFrame()
 
     return df_samples, df_trials, metadata, session_report

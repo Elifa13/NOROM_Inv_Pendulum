@@ -1,9 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ':*)",
+      "Bash(python _build_nb.py)",
+      "Bash(python -m py_compile src/loader.py)",
+      "Bash(python -m py_compile src/qc.py)",
+      "Bash(python -m py_compile src/drive_sync.py)",
+      "Bash(rm _build_nb.py)",
       "Bash(python -c ':*)",
-      "mcp__claude_ai_Google_Drive__search_files"
+      "Bash(pip install:*)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(jupyter kernelspec:*)"
     ]
   }
 }
