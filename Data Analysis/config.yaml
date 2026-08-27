@@ -28,6 +28,16 @@ physics:
   cart_mass_kg: 0.40
   pole_mass_kg: 0.08
   pole_length_m: 1.0
+  # Dinamik denkleminde tam uzunluk degil yarim uzunluk giriyor.
+  # Veriden dogrulandi (bkz. physics.verify_model): duzgun cubuk, 4/3 atalet.
+  pole_half_length_m: 0.5
+  inertia_coeff: 1.3333333333333333
+
+t0:
+  # T0 = kuvvetsiz serbest dususte fall limitine varma suresi
+  integration_dt_s: 0.016666666666666666
+  max_time_s: 60.0
+  angle_round_decimals: 4
 
 qc:
   dead_input_threshold: 0.0
@@ -35,6 +45,24 @@ qc:
   low_activity_threshold: null
   velocity_correlation_warn: 0.99
   dt_tolerance: 0.001
+  # baslangic acisi RNG akisi karsilastirmasi
+  angle_stream_tolerance_deg: 0.3
+  angle_stream_min_overlap: 30
+  angle_stream_match_rate: 0.9
+
+build:
+  # Park'in noturluk bandi. Girdi -1..1 normalize; orneklerin %73.5'i tam
+  # sifir, sifir olmayan en kucuk deger ~0.015. Band pratikte "tam sifir".
+  input_neutral_band: 0.02
+  # Park footnote: banda takilip kalan I sayilir, joystick soldan saga
+  # gecerken bandan hizli gecis I sayilmaz. Bu esikten kisa notr diziler
+  # zit isaretli sapmalar arasindaysa X (gecici gecis) etiketlenir.
+  neutral_transient_max_samples: 3
+  regime_min_samples: 2
+
+events:
+  # onset: notr banddan cikis, bu kadar ornek boyunca bandin disinda kalmali
+  onset_min_samples: 3
 
 metadata_required_fields:
   - participant_id

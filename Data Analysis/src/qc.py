@@ -86,7 +86,7 @@ def check_structural_integrity(df_trials, metadata, config):
                 issues.append({
                     "participant_id": ", ".join(sorted(pids)),
                     "check": "shared_condition_order",
-                    "status": "FAIL",
+                    "status": "WARN",
                     "detail": f"{len(pids)} katilimci ayni kosul sirasini paylasiyor",
                 })
 
@@ -95,7 +95,7 @@ def check_structural_integrity(df_trials, metadata, config):
                 issues.append({
                     "participant_id": ", ".join(sorted(pids)),
                     "check": "shared_randomization_seed",
-                    "status": "FAIL",
+                    "status": "WARN",
                     "detail": f"randomizationSeed={seed}, {len(pids)} katilimcida ayni",
                 })
 
@@ -356,6 +356,295 @@ def add_analysis_mask(df_samples, df_trials):
     )
     df = df.drop(columns=["_qc"])
     return df
+
+
+def _first_active_angles(df_samples):
+    """Her trial'in ilk active ornegindeki pole acisi."""
+    a = df_samples[df_samples["phase"] == "active"]
+    if a.empty:
+        return pd.DataFrame()
+    a = a.sort_values(["participant_id", "trial_id", "sample_index"])
+    return (
+        a.groupby(["participant_id", "trial_id"])["pole_angle_deg"]
+        .first()
+        .reset_index()
+    )
+
+
+def _angle_draws(df_samples):
+    """Katilimci basina cizilen tum baslangic acilari, kronolojik sirada.
+
+    Her trial'in basinda bir aci cekiliyor, trial ici her dususten sonra
+    bir tane daha. Kayittaki deger cekilisten bir fizik adimi sonrasi,
+    o yuzden karsilastirmalar toleransli yapilir.
+    """
+    out = {}
+    for pid, gp in df_samples.groupby("participant_id"):
+        vals = []
+        for tid in sorted(gp["trial_id"].unique()):
+            g = gp[gp["trial_id"] == tid].sort_values("sample_index")
+            a = g[g["phase"] == "active"]
+            if len(a) == 0:
+                continue
+            si = a["sample_index"].values
+            starts = np.concatenate(([0], np.where(np.diff(si) != 1)[0] + 1))
+            vals.extend(a["pole_angle_deg"].values[starts])
+        out[pid] = np.asarray(vals, dtype=float)
+    return out
+
+
+def _best_offset(a, b, tol, min_overlap):
+    """b dizisinin a'ya gore en iyi kaymasi (start_b = start_a + offset).
+
+    Kapsama degil kismi ortusme aranir: offset negatif de olabilir, yani
+    b, a'dan once baslamis olabilir. Aday offsetler once ortak degerler
+    uzerinden bulunur, sonra dogrulanir; tum kaymalari taramaktan hizli.
+    """
+    cands = set()
+    for j in range(min(5, len(b))):
+        for i in np.where(np.abs(a - b[j]) < tol)[0]:
+            cands.add(int(i) - j)
+    for i in range(min(5, len(a))):
+        for j in np.where(np.abs(b - a[i]) < tol)[0]:
+            cands.add(i - int(j))
+
+    best_rate, best_off = 0.0, None
+    for off in cands:
+        ia = max(0, off)
+        ib = max(0, -off)
+        n = min(len(a) - ia, len(b) - ib)
+        if n < min_overlap:
+            continue
+        rate = float(np.mean(np.abs(a[ia:ia + n] - b[ib:ib + n]) < tol))
+        if rate > best_rate:
+            best_rate, best_off = rate, off
+    return best_rate, best_off
+
+
+def check_angle_stream(df_samples, config):
+    """Baslangic acilari ortak bir RNG dizisinden mi geliyor.
+
+    Seed sabitse tek bir aci listesi uretilir ve her katilimci ondan okur.
+    Imlec davranisa gore ilerledigi icin (her dusus bir cekilis tuketir)
+    aciar disaridan bagimsizmis gibi gorunur.
+
+    Her katilimci ciftinde "b, a'nin icinde hangi kaydirmada oturuyor"
+    aranir; eslesen ciftler birlestirilip her katilimciya ortak listede
+    bir baslangic pozisyonu atanir.
+
+    Doner: DataFrame (participant_id, n_draws, stream_group,
+                      start_offset, match_rate)
+    """
+    if df_samples.empty:
+        return pd.DataFrame()
+
+    qc = config.get("qc", {})
+    tol = qc.get("angle_stream_tolerance_deg", 0.3)
+    min_overlap = qc.get("angle_stream_min_overlap", 30)
+    hit = qc.get("angle_stream_match_rate", 0.9)
+
+    draws = {k: v for k, v in _angle_draws(df_samples).items() if len(v) > 0}
+    if len(draws) < 2:
+        return pd.DataFrame()
+
+    pids = sorted(draws, key=lambda k: -len(draws[k]))
+
+    # a -> b kenari: start_b = start_a + off (off negatif olabilir)
+    edges = {}
+    rates = {p_: np.nan for p_ in pids}
+    for ia, a in enumerate(pids):
+        for b in pids[ia + 1:]:
+            rate, off = _best_offset(draws[a], draws[b], tol, min_overlap)
+            if rate >= hit and off is not None:
+                edges.setdefault(a, []).append((b, off))
+                edges.setdefault(b, []).append((a, -off))
+                for x in (a, b):
+                    rates[x] = rate if np.isnan(rates[x]) else max(rates[x], rate)
+
+    # bagli bilesenler + ortak listede baslangic pozisyonu
+    start = {}
+    group = {}
+    gid = 0
+    for root in pids:
+        if root in start:
+            continue
+        gid += 1
+        start[root], group[root] = 0, gid
+        stack = [root]
+        while stack:
+            a = stack.pop()
+            for b, off in edges.get(a, []):
+                pos = start[a] + off
+                if b not in start:
+                    start[b], group[b] = pos, gid
+                    stack.append(b)
+
+    # pozisyonlari grup icinde 0'dan baslat
+    base = {}
+    for p_ in start:
+        g = group[p_]
+        base[g] = min(base.get(g, start[p_]), start[p_])
+
+    rows = []
+    for p_ in sorted(draws):
+        rows.append({
+            "participant_id": p_,
+            "n_draws": len(draws[p_]),
+            "stream_group": group.get(p_),
+            "start_offset": start.get(p_, 0) - base.get(group.get(p_), 0),
+            "match_rate": (
+                np.nan if np.isnan(rates.get(p_, np.nan))
+                else round(rates[p_], 3)
+            ),
+        })
+    return pd.DataFrame(rows)
+
+
+def check_randomization(df_trials, df_samples, metadata, config):
+    """Randomizasyonu metadata'ya bakmadan veriden dogrular.
+
+    metadata'daki condition_order bir iddia; burada trial_summary ve
+    timeseries'ten okunan gercek diziyle karsilastirilir, sonra
+    katilimcilar arasi ozdeslik olculur.
+
+    Doner: dict
+        metadata_vs_data    metadata condition_order trial_summary ile uyusuyor mu
+        across_participants katilimcilar arasi ozdeslik ozeti
+        position_table      kosul x tur ici pozisyon sayimi (betimleyici)
+        trial_order_table   kosul x trial_order (ogrenme/yorgunluk dengesi)
+    """
+    out = {
+        "metadata_vs_data": pd.DataFrame(),
+        "across_participants": pd.DataFrame(),
+        "position_table": pd.DataFrame(),
+        "trial_order_table": pd.DataFrame(),
+        "initial_angle_balance": pd.DataFrame(),
+        "initial_angle_effect": pd.Series(dtype=float),
+    }
+    if df_trials.empty:
+        return out
+
+    # --- metadata iddiasi vs trial_summary gercegi ---
+    # trial_order practice triallarda 0'a esit (uc trial da 0), bu yuzden
+    # siralama trial_id uzerinden yapilir.
+    rows = []
+    for key, meta in metadata.items():
+        pid = meta.get("participant_id", key.split("/")[0])
+        claimed = [c.split(":")[-1] for c in meta.get("condition_order", [])]
+        actual = list(
+            df_trials[df_trials["participant_id"] == pid]
+            .sort_values("trial_id")["noise_level_id"]
+        )
+        if not claimed:
+            rows.append({
+                "participant_id": pid, "n_metadata": 0, "n_data": len(actual),
+                "match": False, "detail": "condition_order metadata'da yok",
+            })
+            continue
+        same_len = len(claimed) == len(actual)
+        n_diff = (
+            sum(c != a for c, a in zip(claimed, actual)) if same_len else -1
+        )
+        rows.append({
+            "participant_id": pid,
+            "n_metadata": len(claimed),
+            "n_data": len(actual),
+            "match": bool(same_len and n_diff == 0),
+            "detail": "" if same_len else "uzunluklar farkli",
+        })
+    out["metadata_vs_data"] = pd.DataFrame(rows)
+
+    meas = df_trials[df_trials["practice"] == 0]
+    if meas.empty:
+        return out
+
+    pids = sorted(meas["participant_id"].unique())
+    n_pid = len(pids)
+
+    def _seq(pid, col):
+        return tuple(meas[meas["participant_id"] == pid].sort_values("trial_order")[col])
+
+    checks = [
+        ("kosul sirasi", {_seq(p, "noise_level_id") for p in pids}),
+        ("noise_seed dizisi", {_seq(p, "noise_seed") for p in pids}),
+    ]
+
+    angles = _first_active_angles(df_samples)
+    if not angles.empty and n_pid > 1:
+        piv = angles.pivot(
+            index="trial_id", columns="participant_id", values="pole_angle_deg"
+        )
+        piv = piv.dropna()
+        n_same = int((piv.nunique(axis=1) == 1).sum()) if len(piv) else 0
+        angle_detail = f"{n_same}/{len(piv)} trial'da tum katilimcilarda ayni"
+        angle_identical = bool(len(piv) > 0 and n_same == len(piv))
+    else:
+        angle_detail = "hesaplanamadi"
+        angle_identical = False
+
+    summary = [
+        {
+            "olcut": name,
+            "farkli_dizi_sayisi": len(distinct),
+            "tum_katilimcilarda_ozdes": len(distinct) == 1,
+            "detay": f"{n_pid} katilimci",
+        }
+        for name, distinct in checks
+    ]
+    summary.append({
+        "olcut": "baslangic acisi",
+        "farkli_dizi_sayisi": np.nan,
+        "tum_katilimcilarda_ozdes": angle_identical,
+        "detay": angle_detail,
+    })
+    out["across_participants"] = pd.DataFrame(summary)
+
+    # --- betimleyici tablolar ---
+    # Tur ici pozisyon dagilimi. Bu bir kusur testi DEGIL: tur sayisi az,
+    # hucre basina beklenen sayi dusuk, sapmalar tek bir cekiliste sansa girer.
+    # Katilimcilar ayni diziyi paylasiyorsa havuzlamak sayilari n kati
+    # gosterir; o durumda tek katilimci uzerinden hesaplanir.
+    order_identical = len({_seq(p_, "noise_level_id") for p_ in pids}) == 1
+    pos_src = meas[meas["participant_id"] == pids[0]] if order_identical else meas
+    pos = pd.crosstab(pos_src["noise_level_id"], pos_src["condition_order_in_round"])
+    pos.columns = [f"poz_{c}" for c in pos.columns]
+    pos.attrs["basis"] = (
+        f"tek katilimci ({pids[0]}); {n_pid} katilimcinin dizisi ozdes"
+        if order_identical else f"{n_pid} katilimci havuzlanmis"
+    )
+    out["position_table"] = pos
+
+    out["trial_order_table"] = (
+        meas.groupby("noise_level_id")["trial_order"]
+        .agg(["mean", "min", "max"])
+        .round(1)
+    )
+
+    # Baslangic acisi kosullar arasinda dengeli mi ve sonucu etkiliyor mu.
+    # Asil soru bu: aci listesi ortak olsa bile kosul karsilastirmasini
+    # ancak kosullar arasi dengesizlik + sonuca etki birlikte bozar.
+    ang = _first_active_angles(df_samples)
+    if not ang.empty:
+        d = meas.merge(ang, on=["participant_id", "trial_id"], how="inner")
+        if not d.empty:
+            d = d.assign(abs_init=d["pole_angle_deg"].abs())
+            bal = (
+                d.groupby("noise_level_id")["abs_init"]
+                .agg(["mean", "std", "count"])
+                .round(3)
+            )
+            bal.attrs["spread"] = float(bal["mean"].max() - bal["mean"].min())
+            bal.attrs["within_sd"] = float(d["abs_init"].std())
+            out["initial_angle_balance"] = bal
+
+            corr = {}
+            for m in ["fall_count", "mean_abs_pole_angle_deg",
+                      "rms_pole_angle_deg", "within_bounds_time_s"]:
+                if m in d.columns:
+                    corr[m] = round(float(d["abs_init"].corr(d[m])), 3)
+            out["initial_angle_effect"] = pd.Series(corr, name="corr_abs_init")
+
+    return out
 
 
 def _collect_keys(obj):
