@@ -1,0 +1,75 @@
+# Analysis configuration
+# null degerler: o kural gercek veri gelene kadar atlanir
+
+paths:
+  raw_dir: "data/raw"
+  interim_dir: "data/interim"
+
+experiment:
+  practice_trials: 3
+  measurement_trials: 50
+  total_trials: 53
+  rounds: 10
+  conditions_per_round: 5
+  conditions: ["no_noise", "N1", "N2", "N3", "N4"]
+  trial_duration_s: 20.0
+  reset_duration_s: 1.0
+  sampling_rate_hz: 60
+  samples_per_trial: 1200
+
+physics:
+  max_force_n: 4.0
+  angle_limit_deg: 60.0
+  track_limit_m: 5.0
+  gravity: 1.0
+  cart_mass_kg: 0.40
+  pole_mass_kg: 0.08
+  pole_length_m: 1.0
+
+qc:
+  dead_input_threshold: 0.0   # max(|input_raw|)==0 -> dead controller
+  min_fps: null               # gercek veri gelince doldurulacak
+  low_activity_threshold: null
+  velocity_correlation_warn: 0.99
+  dt_tolerance: 0.001
+
+metadata_required_fields:
+  - participant_id
+  - session_id
+  - created_at
+  - unity_version
+  - gravity
+  - cart_mass_kg
+  - pole_mass_kg
+  - pole_length_m
+  - max_force_n
+  - track_limit_m
+  - angle_limit_deg
+  - fixed_delta_time_s
+  - config
+
+metadata_requested_fields:
+  - screen_width_px
+  - screen_height_px
+  - screen_physical_width_cm
+  - viewing_distance_cm
+  - refresh_rate_hz
+  - full_screen
+  - input_axis_name
+  - deadzone
+  - sensitivity
+  - invert_axis
+  - noise_texture_width_px
+  - noise_texture_height_px
+  - noise_update_rate_hz
+  - noise_mean
+  - noise_clipping_method
+  - noise_monochrome_or_rgb
+  - noise_overlay_opacity
+  - balance_angle_limit_deg
+  - balance_cart_limit_m
+  - experiment_version
+  - build_id
+  - scene_name
+  - operating_system
+  - session_start_utc

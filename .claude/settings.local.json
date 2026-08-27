@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ':*)",
+      "Bash(python -c ':*)",
+      "mcp__claude_ai_Google_Drive__search_files"
+    ]
+  }
+}

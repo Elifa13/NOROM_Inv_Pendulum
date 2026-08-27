@@ -1,0 +1,17 @@
+# Ham ve turetilmis veri git'e girmez. Kaynak Google Drive.
+Data Analysis/data/raw/**
+Data Analysis/data/interim/**
+Data Analysis/data/processed/**
+!Data Analysis/data/**/.gitkeep
+
+# Eski konum
+Data Analysis/Data_Raw/**
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
