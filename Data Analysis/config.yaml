@@ -104,3 +104,20 @@ metadata_requested_fields:
   - scene_name
   - operating_system
   - session_start_utc
+
+# --- Acil sunum notebook'u (90_sunum.ipynb) icin. Izole: baska hicbir
+# notebook bu blogu okumaz, silinmesi zincirin geri kalanini etkilemez.
+presentation:
+  success_angle_deg: 30.0        # |theta| <= bu -> basarili dengeleme
+  trial_duration_s: 20.0         # payda; her measurement trial tam 1200 active sample
+  baseline_condition: "no_noise"
+  # kisisel optimal composite'e giren metrikler (yonu net olanlar).
+  # cart_rms disarida: dusuk cart salinimi "iyi kontrol" de olabilir
+  # "hic mudahale etmedi" de -- yonu belirsiz, sadece incelemek icin.
+  composite_metrics: ["mae_angle_deg", "success_time_s", "falls_per_trial"]
+  figure_dir: "data/processed/sunum"
+  figure_dpi: 200
+  # Esik taramasi: "basarili dengeleme" tanimini degistirince sonuc
+  # degisiyor mu. Ana figurler yine success_angle_deg ile cizilir.
+  threshold_sweep_deg: [5, 10, 15, 20, 25, 30, 45]
+  raw_dir_for_check: "data/raw"
