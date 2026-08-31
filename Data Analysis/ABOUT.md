@@ -25,7 +25,8 @@ data/
 | `physics.py` | Cart-pole modeli, doğrulaması, T₀ |
 | `build.py` | Episode ve regime run segmentasyonu, state, action sınıfları, girdi olayı tespiti (`input_events`) |
 | `performance.py` | Trial ve katılımcı × koşul düzeyi metrikler, metrik seti seçimi |
-| `timing.py` | Ludolph action timing: durum olayları (`state_events`), segment çıkarma, hız tabakalama, sıfır geçişi |
+| `timing.py` | Ludolph action timing: durum olayları (`state_events`), segment çıkarma, velocity stratification, zero crossing |
+| `decide.py` | NB06 karar istatistiği: Friedman, Wilcoxon/Holm, trend kontrastları, duyarlılık |
 | `presentation.py` | **İzole.** Sunum notebook'u için; zincirin geri kalanı import etmez |
 
 ## Veri katmanları

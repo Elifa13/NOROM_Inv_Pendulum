@@ -10,7 +10,7 @@ Notebook'lar ince — mantık `../src/` altında.
 | 03 | `03_performance.ipynb` | Trial düzeyi metrikler, metrik seti seçimi, katılımcı × koşul birimine toplama | çalıştı, 12 katılımcı |
 | 04 | `04_control.ipynb` | Action timing (Ludolph), hız tabakalama, action variability, açı bandı taraması. I/CR/D/A dağılımı öncelik dışı bırakıldı | çalıştı, 12 katılımcı |
 | 05 | Learning | Pilotta varyans/güç tahmini; koşullar arası öğrenme karşılaştırması DEĞİL | **yazılmadı** |
-| 06 | Noise kararı | Koşul × metrik tablosu, U-şekil kontrolü, aday seçimi | **yazılmadı** |
+| 06 | `06_noise_decision.ipynb` | Friedman + Wilcoxon/Holm, lineer ve kuadratik trend kontrastları, U-şekil kontrolü, duyarlılık, aday seçimi | çalıştı, 12 katılımcı |
 | 90 | `90_sunum.ipynb` | Acil sunum. **İzole** — `presentation.py` kullanır, zincirin parçası değil, silinse zincir etkilenmez | çalıştı, 12 katılımcı |
 
 ## Zincir mantığı

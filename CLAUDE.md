@@ -129,7 +129,7 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 | 03 | Performance | Trial düzeyi metrikler, metrik seti seçimi, katılımcı × koşul birimine toplama. Çıktı: `trial_metrics` / `participant_condition` parquet |
 | 04 | Control mechanism | Action timing (Ludolph), variability, velocity stratification, açı bandı taraması. Çıktı: `state_events` / `timing_cells` parquet. I/CR/D/A dağılımı öncelik dışı bırakıldı |
 | 05 | Learning | Pilotta işi varyans/güç tahmini; koşullar arası öğrenme karşılaştırması DEĞİL |
-| 06 | Noise kararı | Koşul × metrik tablosu, U-şekil kontrolü, aday seçimi |
+| 06 | Noise kararı | Friedman + Wilcoxon/Holm, lineer ve kuadratik trend kontrastı (SR testi), duyarlılık, aday sıralaması. Çıktı: `data/processed/karar/` |
 
 02 var çünkü 03 ve 04 aynı türetmeyi iki kere yapmasın. 04, 05'ten önce çünkü learning kriteri action timing'i girdi olarak kullanıyor. Drive'dan veri çekme NB01'in ilk hücresi (`src/drive_sync.py`).
 
@@ -193,16 +193,27 @@ Kod `src/timing.py`, eşikler `config.yaml` → `timing`, gerekçeler `Yontem/05
 - **Action variability ayrı bilgi taşımıyor.** Gürültüyle düşüyor (N4 dz −0.77) ama amplitude'a bölününce kayboluyor (dz −0.27) — kuvvet küçülüyor, tutarlılık artmıyor.
 - **P007 iki bağımsız ölçüde de aykırı:** tek reaktif kişi (+126 ms) ve NB02'de D oranı %15.2 (diğerleri ~%2).
 
-## Notebook 06: noise seviyesi nasıl seçilecek
+## Notebook 06 sonucu: karar
 
-Koşul tablosu — satırlar: no_noise / N1 / N2 / N3 / N4, sütunlar: falls (düşük iyi), within_bounds (yüksek iyi), maPA (düşük iyi), RMS_theta, control effort (düşük iyi)
+Kod `src/decide.py`, gerekçeler `Yontem/06_Karar_Istatistigi.md`, sonuç metni `Pilot_Sonuc_Ozeti.md`. Analiz birimi katılımcı × koşul, n = 12, bütün testler within-subject ve non-parametrik.
 
-Prosedür:
-1. Katılımcı başına 10 tekrarın özeti
-2. Participant × condition düzeyinde birleştir
-3. Grup genelinde noise–performance eğrisine bak, U şekli var mı
-4. Ana kriterler birbirine çok yakın çıkarsa RMS_theta ve control effort tie-breaker
-5. Seçilen sonucu katılımcı düzeyinde kontrol et: tek bir kişinin kötü performansından mı geliyor
+**Stochastic resonance desteklenmiyor.** U şeklinin doğrudan testi kuadratik ortogonal kontrast; üç karar metriğinde de null.
+
+| Metrik | Friedman p | Kendall W | Lineer p | **Kuadratik p** |
+|---|---|---|---|---|
+| `mae_angle_deg` | 0.0014 | 0.37 | 0.00049 (12/12 aynı yön) | **0.62** |
+| `stab_time_s` | 0.021 | 0.24 | 0.0049 (10/12) | **0.57** |
+| `falls_angle_per_trial` | 0.0051 | 0.31 | 0.00098 (11/12) | **0.58** |
+| `control_effort` | 0.75 | 0.04 | 1.00 | 0.38 |
+| `cart_rms_m` | 0.13 | 0.15 | 0.68 | 1.00 |
+
+**N1 baseline'dan ayırt edilemiyor:** üç metrikte de p ≈ 0.90, dz ≤ 0.20, 6/12. N2/N3/N4 maPA'da Holm sonrası anlamlı (dz 0.96–1.18, 11/12); diğer iki metrikte Holm sonrası yalnız N4 kalıyor.
+
+**Nüans:** grup ortalamasında üç metrikte de sayısal en iyi koşul N1 — tepe iç bir koşulda. Ama fark gürültünün içinde ve kuadratik null; bu U değil, no_noise ile N1'in ayırt edilemezliği. Composite'te kimsenin en iyisi N3/N4 değil (6 no_noise, 5 N1, 1 N2).
+
+**Duyarlılık:** P011'in iki `paused` trial'ı çıkarılınca hiçbir p oynamıyor. Stabilizasyon eşiği 10°–45° taramasında her eşikte lineer anlamlı, hiçbirinde kuadratik anlamlı değil.
+
+**Aday sıralaması:** 1) N1 (σ=0.02) — noise var ama performansı bozmuyor. 2) N2 (σ=0.05) — etkisi ölçülebilir en düşük seviye. N3/N4 eleniyor. **Sıra, ana deneyin tasarımına bağlı** (bkz. Açık sorular).
 
 ## Veride görülen sorunlar
 
@@ -355,7 +366,7 @@ Kod ve sayılar burada, **gerekçeler `Documentation/` altında.** Bir metrik bi
 
 | Belge | Ne için |
 |---|---|
-| `Documentation/Yontem/` | Hesap başına bir kayıt: 01 veri işleme, 02 fizik/T₀, 03 durum-aksiyon-episode, 04 performans metrikleri, 05 action timing (kararlar + fizibilite + NB04 sonuçları) |
+| `Documentation/Yontem/` | Hesap başına bir kayıt: 01 veri işleme, 02 fizik/T₀, 03 durum-aksiyon-episode, 04 performans metrikleri, 05 action timing, 06 karar istatistiği |
 | `Documentation/Analiz_Gunlugu.md` | Tarihli günlük, yeni giriş üste. Ne zaman ne karara bağlandı |
 | `Documentation/Pilot_Sonuc_Ozeti.md` | Pilotun bulgusu (sunumun metin karşılığı). Klasördeki pptx/docx 26 Ağustos tarihli, sayıları geçersiz |
 | `Documentation/Veri_Kayit_Istekleri.md` | Ekibe giden kayıt formatı istekleri, rev. 2 (12 katılımcı) |
@@ -374,8 +385,10 @@ Yeni bir analiz kararı verildiğinde günlüğe bir giriş, ilgili yöntem kayd
 
 ## Açık sorular
 
-- Ana deney tek noise seviyesi + no_noise kontrol grubu mu, yoksa herkes aynı noise'u mu alıyor? Ekibe sorulacak, NB06'nın ne üreteceğini değiştirir.
-- Pilot seviyeyi anlık performansa göre seçiyor, ana deney öğrenmeyi ölçecek. Ludolph'un bulgusu bu ikisinin ayrışabileceği yönünde. Rapora tek seviye yerine sıralı iki aday yazmak makul bir hedge.
+- **Ana deney tek noise seviyesi + no_noise kontrol grubu mu, yoksa herkes aynı noise'u mu alıyor?** Ekibe soruldu, cevap gelmedi. NB06 çalıştı ama **aday sırası bu cevaba bağlı**: kontrol grubu varsa N2 (N1–baseline farkı bu pilotta saptanamayacak kadar küçük, muhtemelen null çıkar), herkes aynı noise'u alıyorsa N1 (noise öğrenmeyi ölçmeyi engellememeli).
+- Pilot anlık performansa bakıyor, ana deney öğrenmeyi ölçecek. Ludolph'un bulgusu bu ikisinin ayrışabileceği yönünde — o yüzden rapora tek seviye değil sıralı iki aday yazıldı.
+- **Güç analizi yok.** N1'in null çıkması "fark yok" değil "bu örneklemle saptanamadı" demek. NB05'in işi.
+- A sınıfı (%0.30) istatistiksel olarak kullanılabilir mi — NB04'te öncelik dışı bırakıldı.
 
 ## Veri kaynağı ve git
 

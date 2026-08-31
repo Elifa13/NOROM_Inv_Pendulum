@@ -26,6 +26,7 @@ alınamadı, yerine ne kondu.
 | [03_Durum_Aksiyon_Episode.md](03_Durum_Aksiyon_Episode.md) | Park state/action, işaret konvansiyonu, episode ve regime run | NB02 |
 | [04_Performans_Metrikleri.md](04_Performans_Metrikleri.md) | Trial metrikleri, metrik seti seçimi | NB03 |
 | [05_Action_Timing.md](05_Action_Timing.md) | Ludolph'un event-triggered averaging'i; transfer kararları, fizibilite ve NB04 sonuçları | NB04 |
+| [06_Karar_Istatistigi.md](06_Karar_Istatistigi.md) | Test seçimi, trend kontrastları (SR testi), çoklu karşılaştırma, duyarlılık | NB06 |
 
 ## İlgili belgeler
 

@@ -8,6 +8,44 @@ cevabın ve o günkü gerekçenin bulunabilmesi. Yöntem ayrıntıları
 
 ---
 
+## 2026-08-31 — NB06: karar verildi, SR desteklenmiyor
+
+`src/decide.py` + `06_noise_decision.ipynb`. Çıktı
+`data/processed/karar/decision_stats.csv` ve `decision_table.csv`.
+Yöntem kaydı: [Yontem/06](Yontem/06_Karar_Istatistigi.md), sonuçlar
+[Pilot_Sonuc_Ozeti.md](Pilot_Sonuc_Ozeti.md).
+
+**Sonuç: stochastic resonance desteklenmiyor.** Kuadratik kontrast — U
+şeklinin doğrudan testi — üç karar metriğinde de null (p = 0.57–0.62).
+Lineer kontrast üçünde de anlamli (p = 0.0005 / 0.0049 / 0.001) ve
+`mae_angle_deg`'de 12 katılımcının 12'sinde aynı yönde. Noise arttıkça
+düzenli bozulma var, ortada tepe yok.
+
+**N1 baseline'dan ayırt edilemiyor** (üç metrikte de p ≈ 0.90,
+d<sub>z</sub> ≤ 0.20, 6/12). N2/N3/N4 `mae_angle_deg`'de Holm sonrası
+anlamlı (d<sub>z</sub> 0.96–1.18, 11/12).
+
+**Bir nüans kayda değer:** grup ortalamasında üç metrikte de sayısal olarak
+en iyi koşul N1. Yüzeyde U şekli gibi duruyor ama fark gürültünün içinde ve
+kuadratik kontrast null. `decide.interior_optimum` bu kontrolü kuadratik
+testin yanına koymak için yazıldı — tek bir null teste dayanmamak için.
+Composite'te kimsenin en iyisi N3/N4 değil (6 no_noise, 5 N1, 1 N2).
+
+**İki duyarlılık kontrolü de temiz.** P011'in iki `paused` trial'ı
+çıkarılınca hiçbir p oynamıyor. Stabilizasyon eşiği 10°–45° taramasında her
+eşikte lineer anlamlı, hiçbirinde kuadratik anlamlı değil.
+
+**Aday sıralaması ana deneyin tasarımına bağlı** ve bu hâlâ açık soru:
+kontrol grubu varsa N2 (N1–baseline farkı saptanamayacak kadar küçük),
+herkes aynı noise'u alıyorsa N1 (noise öğrenmeyi ölçmeyi engellememeli).
+NB06 her iki durum için gereken sayıları üretti.
+
+**Not:** `Pilot_Sonuc_Ozeti.md` artık sunum notebook'unun değil zincirin
+sayılarını taşıyor. Tek farklılık düşüş metriğinde — sunum bütün düşüşleri
+sayıyordu, karar seti sadece açı kaynaklı olanları.
+
+---
+
 ## 2026-08-31 — NB04 yazıldı: action timing ölçüldü, koşul etkisi yok
 
 `src/timing.py` + `04_control.ipynb` + `config.yaml` → `timing` bloğu.
