@@ -315,8 +315,9 @@ def segment_regimes(df_samples, config):
     Failed     aci limitine (+-60 deg) varan run. Park ile karsilastirilabilir
                olan tek "basarisiz" etiketi budur.
     TrackLoss  cart ray limitine carpmasiyla biten run. Kuadrandan bagimsiz;
-               mevcut veride 29'u safe kuadraninda oluyor. Park'ta karsiligi
-               yok, Park karsilastirmalarindan cikarilmali.
+               mevcut veride 140 ray dususunun 42'si safe kuadraninda
+               oluyor. Park'ta karsiligi yok, Park karsilastirmalarindan
+               cikarilmali.
     censored   fall kuadranindaki son run, trial bitisiyle kesildi
 
     Run'lar episode sinirini asmaz.
@@ -399,20 +400,26 @@ def segment_regimes(df_samples, config):
     return pd.DataFrame(rows)
 
 
-def detect_events(df_samples, config):
-    """Girdi olaylari: notr banddan cikis, yon degistirme, dusus.
+def detect_input_events(df_samples, config):
+    """GIRDI tarafinda tanimli olaylar: banddan cikis, yon degistirme, dusus.
 
-    Ludolph'un action timing analizi kuvvet yon degistirme anlarini
-    kullanir. Olaylar episode icinde aranir; reset satirlari zaten
-    disarida oldugu icin parcalar arasi sahte zero-crossing olusmaz.
-    (Reset satirlarinda applied_force_n sifira zorlanip input_applied
-    son degerinde kaldigi icin bu ayrim onemli.)
+    DIKKAT -- bunlar Ludolph'un event'leri DEGIL. Ludolph'un action timing
+    analizinde olay DURUM tarafinda tanimli: pole belirli bir tamsayi aciyi
+    duserken geciyor. Ikisi farkli kavram; ayrimi icin bkz.
+    Documentation/Yontem/05_Action_Timing.md.
+
+    Buradaki olaylar tanimlayici istatistik ve QC icin (dusus sayisinin
+    bagimsiz dogrulanmasi dahil). Olaylar episode icinde aranir; reset
+    satirlari zaten disarida oldugu icin parcalar arasi sahte zero-crossing
+    olusmaz. (Reset satirlarinda applied_force_n sifira zorlanip
+    input_applied son degerinde kaldigi icin bu ayrim onemli.)
     """
     if df_samples.empty:
         return pd.DataFrame()
 
     band = float(config.get("build", {}).get("input_neutral_band", 0.0))
-    min_on = int(config.get("events", {}).get("onset_min_samples", 1))
+    ev_cfg = config.get("input_events", config.get("events", {}))
+    min_on = int(ev_cfg.get("onset_min_samples", 1))
 
     rows = []
     for (pid, tid), g in df_samples.groupby(["participant_id", "trial_id"]):
@@ -471,12 +478,12 @@ def detect_events(df_samples, config):
 def build_all(df_samples, df_trials, config):
     """Tum turetmeleri sirayla uygular.
 
-    Doner: (df_built, episodes, regimes, events)
+    Doner: (df_built, episodes, regimes, input_events)
     """
     df = add_state(df_samples)
     df = classify_actions(df, config)
     df = add_episode_index(df)
     episodes = segment_episodes(df, config, df_trials)
     regimes = segment_regimes(df, config)
-    events = detect_events(df, config)
-    return df, episodes, regimes, events
+    input_events = detect_input_events(df, config)
+    return df, episodes, regimes, input_events

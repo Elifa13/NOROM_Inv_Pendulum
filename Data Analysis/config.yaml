@@ -60,7 +60,10 @@ build:
   neutral_transient_max_samples: 3
   regime_min_samples: 2
 
-events:
+# GIRDI tarafinda tanimli olaylar (build.detect_input_events).
+# Ludolph'un action timing event'leri DEGIL -- onlar durum tarafinda
+# (pole tamsayi aciyi duserken geciyor), bkz. Yontem/05_Action_Timing.md.
+input_events:
   # onset: notr banddan cikis, bu kadar ornek boyunca bandin disinda kalmali
   onset_min_samples: 3
 
@@ -104,6 +107,46 @@ metadata_requested_fields:
   - scene_name
   - operating_system
   - session_start_utc
+
+performance:
+  # NB03. Kayittaki within_bounds_time_s failure limitini (60 deg / 5 m)
+  # kullaniyor ve her trial'da ~19.95 s cikiyor -- ayirt etmiyor. Kendi
+  # esigimiz: |theta| <= bu deger sayilirsa "dengede".
+  stab_angle_deg: 30.0
+  trial_duration_s: 20.0          # payda; her measurement trial 1200 active sample
+  baseline_condition: "no_noise"
+  # sIQR gereksizlik testi (NB03 2). Iki kriterden biri yeterli:
+  #  - katilimci ici korelasyon bu esigin ustunde (duz kopya), VEYA
+  #  - kosul profilinin lineer kontrastinin bu kadarindan azi artikta
+  #    kaliyor, yani noise trendini RMS zaten aciklamis.
+  redundancy_abs_r: 0.9
+  redundancy_retained_trend: 0.25
+
+timing:
+  # NB04, Ludolph action timing. Gerekceler: Yontem/05_Action_Timing.md
+  # Olaya ortalanmis segmentin yari uzunlugu. Ludolph 1 s'lik pencere.
+  segment_half_s: 0.5
+  # Ludolph her tamsayi aciyi ayri olay sayiyor; biz merkez +- yariband
+  # havuzluyoruz (tek acida ortalama egri bazen sifiri birden fazla
+  # kesiyor, dar bant tek gecise dusuruyor).
+  band_centers_deg: [5, 10, 15, 20]
+  band_half_width_deg: 2
+  # Ana analiz bandi. Digerleri saglamlik taramasi; aci sabitlenmeden
+  # kosul/deneme karsilastirmasi yapilmaz (05 6: aci arasi fark yorumlanmaz).
+  main_band_center_deg: 10
+  # Ludolph bu kuantillerin disini atiyor; biz atmiyoruz, tabakaliyoruz.
+  velocity_quantiles: [0.2, 0.8]
+  # Action variability: sifir gecisi +- bu pencere icinde segmentler arasi sd
+  variability_window_s: 0.06
+  # Bir hucrede sifir gecisi aranmasi icin gereken en az segment
+  min_segments: 30
+  # Olcut ancak gercek bir yon degistirme varsa tanimli: ortalama egri
+  # negatiften pozitife gecmeli VE genlik, ortalamanin standart hatasinin
+  # bu kati kadar olmali. Yavas gecis tabakasinda egri duz kaliyor.
+  min_amp_sem_ratio: 10
+  # Ogrenme ekseni pencere genisligi (deneme). Ludolph'un 2 dk'si ~6 deneme.
+  trial_window_size: 10
+  bootstrap_n: 400
 
 # --- Acil sunum notebook'u (90_sunum.ipynb) icin. Izole: baska hicbir
 # notebook bu blogu okumaz, silinmesi zincirin geri kalanini etkilemez.

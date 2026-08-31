@@ -10,7 +10,7 @@ Veriyi ben analiz ediyorum, deneyi ben yapmıyorum, tasarımı değiştiremem. K
 
 ## Veri durumu
 
-2026-08-27 itibariyle Drive'daki katılımcılar **gerçek**. Eski smoke test verisi (P001/P002) silindi, artık Drive'da yok. O gün içinde P001–P007'ye ulaşıldı, veri toplama sürüyor — sayı NB01'in ilk hücresi çalıştırıldığında güncellenir.
+2026-08-28 itibariyle Drive'da **12 katılımcı** var (P001–P012), hepsi gerçek. Eski smoke test verisi (P001/P002) silindi, artık Drive'da yok. Toplama 26–27 Ağustos'ta yapıldı; 28 Ağustos'ta Drive'da yeni dosya yok. Sayı NB01'in ilk hücresi çalıştırıldığında güncellenir.
 
 Her katılımcı tek oturum, 53 trial (3 practice + 50 measurement). Davranışsal analiz yapılabilir. Randomizasyon durumu için bkz. "Veride görülen sorunlar" §1.
 
@@ -53,12 +53,12 @@ Raw Sample (FixedUpdate satırı) → Clean Sample (preprocessed) → Event (ons
 
 Episode ve regime run **aynı şey değil**, karıştırılmamalı:
 
-| Birim | Tanım | Sayı (7 katılımcı) | Ne için |
+| Birim | Tanım | Sayı (12 katılımcı) | Ne için |
 |---|---|---|---|
-| Episode | reset'ten reset'e | 1.277 | T₀, süre (Ludolph) |
-| Regime run | kuadran dizisi, θ·ω işaret değiştirince yeni run | 10.855 | Safe/Saved/Failed (Park) |
+| Episode | reset'ten reset'e | 2.017 | T₀, süre (Ludolph) |
+| Regime run | kuadran dizisi, θ·ω işaret değiştirince yeni run | 18.891 | Safe/Saved/Failed (Park) |
 
-Episode başına ortalama 8.5 run düşüyor.
+Episode başına ortalama 9.4 run düşüyor.
 
 ## Fizik parametreleri (Ludolph 2017 ile aynı)
 
@@ -84,8 +84,8 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 
 - Fizik parametreleri (yukarıdaki tablo)
 - **T/T₀**: normalized trial length. T = gerçek trial süresi, T₀ = force uygulanmasaydı serbest düşüşle kaç saniyede fall limitine varırdı. Performansı "hiçbir şey yapmamak"a göre ölçer. **Aynen aktarılamaz** — bkz. aşağıdaki T₀ bölümü.
-- **Action timing**: pole belirli bir tamsayı açıdan geçerken force'un yön değiştirme zamanı (zero crossing). Negatif = predictive (olay öncesi), pozitif = reactive. 2 dakikalık pencerelerle hesaplanır.
-- **Action variability**: force yön değiştirme anı civarında (±60 ms pencere) force'un standart sapması.
+- **Action timing**: pole belirli bir tamsayı açıdan geçerken force'un reversal zamanı (zero crossing). Negatif = predictive (olay öncesi), pozitif = reactive. 2 dakikalık pencerelerle hesaplanır.
+- **Action variability**: force reversal anı civarında (±60 ms pencere) force'un standart sapması.
 - Trial length 30 s cap, başarılı = düşmeden tamamlanan. Inter-success interval.
 - İki grup: gradual gravity (g=1.0→3.5, performansa bağlı artış) vs. constant gravity (g=3.5). Gradual grup daha iyi öğreniyor.
 
@@ -125,9 +125,9 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 | # | Notebook | İçerik |
 |---|---|---|
 | 01 | Load & QC | Veri yükleme, yapısal bütünlük, zaman/sinyal kontrolleri, QC bayrakları |
-| 02 | Build | Episode + regime run segmentasyonu, state (safe/fall), action sınıfı (I/CR/A/D/X), T₀, event tespiti. Çıktı: `samples_built` / `episodes` / `regimes` / `events` parquet |
-| 03 | Performance | Trial düzeyi metrikler (maPA, falls, within_bounds, RMS, control effort, sIQR) |
-| 04 | Control mechanism | Action timing, variability, latency, I/CR/D/A dağılımları |
+| 02 | Build | Episode + regime run segmentasyonu, state (safe/fall), action sınıfı (I/CR/A/D/X), T₀, girdi olayı tespiti. Çıktı: `samples_built` / `episodes` / `regimes` / `input_events` parquet |
+| 03 | Performance | Trial düzeyi metrikler, metrik seti seçimi, katılımcı × koşul birimine toplama. Çıktı: `trial_metrics` / `participant_condition` parquet |
+| 04 | Control mechanism | Action timing (Ludolph), variability, velocity stratification, açı bandı taraması. Çıktı: `state_events` / `timing_cells` parquet. I/CR/D/A dağılımı öncelik dışı bırakıldı |
 | 05 | Learning | Pilotta işi varyans/güç tahmini; koşullar arası öğrenme karşılaştırması DEĞİL |
 | 06 | Noise kararı | Koşul × metrik tablosu, U-şekil kontrolü, aday seçimi |
 
@@ -151,6 +151,48 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 - QC'den düşen trial sadece kendisi çıkar, oturum düşmez. Rapor eşik üstünde uyarır.
 - Şimdilik sadece ölü input kuralı (`max(|input_raw|) == 0` tüm trial boyunca). fps ve düşük aktivite eşikleri gerçek veri gelene kadar config'te null, kod null ise o kuralı atlar.
 
+## Notebook 03 kararları
+
+**Karar metrik seti (NB06'ya giden):**
+
+| Metrik | Yön | Not |
+|---|---|---|
+| `mae_angle_deg` | düşük iyi | RMS ile r=0.98, ikisinden biri |
+| `stab_time_s` | yüksek iyi | kendi eşiğimiz, `performance.stab_angle_deg` = 30° |
+| `falls_angle_per_trial` | düşük iyi | Park'ın Failed'iyla karşılaştırılabilir olan |
+| `control_effort` | belirsiz | tie-breaker |
+| `cart_rms_m` | belirsiz | tie-breaker |
+
+Dışarıda: sIQR'lar, süre metrikleri (yukarıdaki iki bölüm), `falls_track_per_trial` (koşulla ilgisiz, dz'ler ±0.12 içinde; Park karşılaştırmasından zaten çıkıyor).
+
+**Stabilizasyon süresi kendi eşiğimizle hesaplanıyor.** Unity'nin `within_bounds_time_s`'i failure limitini kullandığı için 600 trial'da ort. 19.97 s, sd 0.04 — tavana yapışık, koşulları ayırt etmiyor. |θ| ≤ 30° eşiğiyle ort. 18.22 s, sd 1.67.
+
+**Düşüş sayımı üç kaynakta tutuyor:** sample düzeyi `fall_event` toplamı, sebebe göre ayrılmış toplam (açı 1.025 + ray 131) ve Unity'nin `fall_count`'u — 600 measurement trial'ın 600'ünde birebir aynı.
+
+**Betimleyici sonuç:** bütün ana metriklerde aynı şekil — no_noise ile N1 yapışık, N2'den itibaren monoton bozulma. maPA'da N2/N3/N4 katılımcıların 11/12'sinde baseline'dan kötü (dz 0.96–1.18), N1'de fark yok (dz −0.03, 6/12). **U şekli yok.** Testler NB06'da.
+
+## Notebook 04 kararları
+
+Kod `src/timing.py`, eşikler `config.yaml` → `timing`, gerekçeler `Yontem/05_Action_Timing.md` §5. Çıktı `state_events.parquet` (91.165 olay) ve `timing_cells.parquet`.
+
+**Ölçüt (action timing):** pole tamsayı açıyı **düşerken** geçtiği ana ortalanmış ±0.5 s'lik input segmentlerinin ortalaması; o eğrinin zero crossing'i action timing'dir. Negatif = predictive.
+
+**Analiz birimi angle band:** merkez ± 2°, merkezler 5/10/15/20. Ana bant **10 ± 2**. Tek tamsayı açıda ortalama eğri bazen sıfırı birden fazla kesiyordu; bant tek geçişe indiriyor. Bantlar arası **değer** karşılaştırılmaz (geometri), sadece örüntü.
+
+| Bulgu | Sayı |
+|---|---|
+| Havuz eğrisi zero crossing (bant 10) | −52.6 ms, bootstrap %95 CI −55.6…−49.5 |
+| Amplitude / standart hata | 154× — %73.9 sıfır girdi endişesi boşa çıktı |
+| Katılımcı × koşul hücresi | 60/60 dolu, 59'unda tek geçiş |
+| Kişiler arası yayılım | 269 ms (−143 … +126) |
+| Koşullar arası yayılım | **15 ms** (kişi içi sd 27.6 ms) |
+
+- **Koşul etkisi yok.** Medyanla profil düz, açı bantları arasında işaret değiştiriyor. Action timing karar setine girmiyor, NB06'ya gitmiyor.
+- **Öğrenme kayması sağlam değil.** Ortalamada −39 → −93 ms ama P007 + P012 çıkarılınca düzleşiyor, medyan zaten düz. Kompozisyon kontrolü (orta velocity stratum) geçiyor, kişi kontrolü geçmiyor.
+- **Yavaş geçişlerde ölçüt tanımsız.** Ortalama eğri baştan sona pozitif kalıyor — hiç reversal yok, "zero crossing" düz eğrinin gürültüsü. `curve_stats` bunun için `reversal_ok` ve `guvenilir` (amplitude ≥ 10× SE) bayrakları üretiyor. Ludolph'ta görünmez çünkü o %20–80 dışını atıyor; bizim stratification kararımız görünür kıldı.
+- **Action variability ayrı bilgi taşımıyor.** Gürültüyle düşüyor (N4 dz −0.77) ama amplitude'a bölününce kayboluyor (dz −0.27) — kuvvet küçülüyor, tutarlılık artmıyor.
+- **P007 iki bağımsız ölçüde de aykırı:** tek reaktif kişi (+126 ms) ve NB02'de D oranı %15.2 (diğerleri ~%2).
+
 ## Notebook 06: noise seviyesi nasıl seçilecek
 
 Koşul tablosu — satırlar: no_noise / N1 / N2 / N3 / N4, sütunlar: falls (düşük iyi), within_bounds (yüksek iyi), maPA (düşük iyi), RMS_theta, control effort (düşük iyi)
@@ -170,20 +212,22 @@ Prosedür:
 
    - **Koşul sırası özdeş** — bütün katılımcılar aynı 50 trial'lık diziyi alıyor.
    - **noise_seed dizisi özdeş** — herkes aynı noise desenini görmüş.
-   - **Başlangıç açıları da aynı listeden** — tek bir sabit açı dizisi var, yedi katılımcının hepsi ondan okuyor (hizalama %100). Giriş noktaları farklı: P001/P002/P004/P006 offset 0, P003 76, P007 89, P005 253. Offsetler oturum zincirini birebir doğruluyor — P002 tam 76 çekiliş yapmış ve P003 76'dan giriyor; P004 tam 253 yapmış ve P005 253'ten giriyor. Yani **uygulama katılımcılar arasında kapatılmadığında RNG akışı kaldığı yerden devam ediyor**, kapatılınca 0'a dönüyor.
+   - **Başlangıç açıları da aynı listeden** — tek bir sabit açı dizisi var. P001–P007 hepsi ondan okuyor (hizalama %100). Giriş noktaları farklı: P001/P002/P004/P006 offset 0, P003 76, P007 89, P005 253. Offsetler oturum zincirini birebir doğruluyor — P002 tam 76 çekiliş yapmış ve P003 76'dan giriyor; P004 tam 253 yapmış ve P005 253'ten giriyor. Yani **uygulama katılımcılar arasında kapatılmadığında RNG akışı kaldığı yerden devam ediyor**, kapatılınca 0'a dönüyor.
+
+     P008–P012 `check_angle_stream`'de ayrı gruplara düşüyor, ama bu "farklı seed" demek değil: metadata'da hepsinde seed 12345 ve aynı Unity build var, ayrıca hiçbiri offset 0'da değil (olsaydı P001'in ilk 152 çekilişiyle eşleşirlerdi). Bitişik ama örtüşmeyen dilimler eşleştirilemediği için algoritma zinciri göremiyor. P007 89+479 = 568'de bitiyor; P008–P012 sırayla 568'den itibaren devam ediyorsa gözlenen tablo aynen çıkar. Yani **27 Ağustos öğleden sonra uygulama hiç kapatılmamış** görünüyor — kanıtlanamıyor ama tüm alternatifler (0'a dönüş) elendi.
 
    Açıların dışarıdan bağımsız görünmesinin sebebi: imleç davranışa göre ilerliyor, her düşüş bir çekiliş tüketiyor. Farklı düşüş sayısı → aynı listenin farklı yerleri. İz: P001'in T002'de aldığı −4.0469'u P002 T005'te alıyor.
 
-   **Pilot kararına (NB06) etkisi ölçüldü, küçük:** başlangıç |θ| koşullar arasında dengeli (ortalamalar 3.48–3.95°, yayılım 0.47°, trial içi sd 2.09°) ve sonuçla korelasyonu zayıf (fall_count ile r=+0.14). Tahmini bulaşma koşul ortalamasında ~0.1 düşüş, tipik ~2.2 düşüşün %5'i.
+   **Pilot kararına (NB06) etkisi ölçüldü, 12 katılımcıda 7'dekinden de küçük:** başlangıç |θ| koşullar arasında dengeli (ortalamalar 3.43–3.78°, yayılım 0.35°, trial içi sd 2.11°) ve sonuçla korelasyonu zayıf (fall_count ile r=+0.066; 7 katılımcıda +0.14 idi). Yön de lehimize: en zor başlangıçlar (ort. 3.78°) **no_noise** koşulunda, yani yanlılık "noise performansı bozuyor" bulgusunu şişirmiyor, aksine ona karşı çalışıyor.
 
-   Asıl mesele şu: bu ~%5'lik yanlılık herkeste **aynı yönde** olduğu için katılımcı ekledikçe sönmüyor. Koşullar birbirine yakın çıkarsa (tie-breaker senaryosu) yanlılık ölçülmek istenen etkiyle aynı büyüklükte olur. Düzeltme için bkz. T₀ bölümü — Ludolph'un T/T₀'ı aynen değil, episode düzeyinde uygulanmalı.
+   Yanlılığın sönmeme riski P001–P007 için geçerliydi (hepsi aynı açı dizisinden okuyordu). P008–P012 dizinin farklı bir yerinden okuduğu için katılımcılar arası hizalama kısmen kırıldı. Yine de koşullar birbirine çok yakın çıkarsa (tie-breaker senaryosu) akılda tutulmalı. Düzeltme için bkz. T₀ bölümü — Ludolph'un T/T₀'ı aynen değil, episode düzeyinde uygulanmalı.
 
    Koşul sırası tarafında ise **her tur içinde yeniden karılıyor**, sabit olan 50 trial'lık dizinin tamamı. Her koşulun ortalama `trial_order`'ı 24.6–26.5 (1–50 aralığında) — öğrenme/yorgunluk koşulla karışmamış, asıl korkulan confound yok. Tur içi pozisyon dağılımı tümsekli ama tur sayısı az (hücre başına beklenen 2), bu büyüklükte sapma tek çekilişte şansa girer; tablo betimleyicidir, kusur testi değil.
 
-   **Ekibe tek istek:** seed'i katılımcı id'sinden türetin ve her oturumda RNG'yi yeniden tohumlayın. Bu üç sorunu birden çözer. NB01'de `shared_condition_order` / `shared_randomization_seed` WARN veriyor, §7'de `check_angle_stream` akışı gösteriyor.
+   **Ekibe tek istek:** seed'i katılımcı id'sinden türetin ve her oturumda RNG'yi yeniden tohumlayın. Bu üç sorunu birden çözer. NB01'de `shared_condition_order` / `shared_randomization_seed` WARN veriyor. `check_angle_stream` `src/qc.py`'de var ama NB01 §7'de **çağrılmıyor** — akış tablosu istenirse elle çalıştırılmalı.
 2. **Reset satırlarında applied_force_n 0'a zorlanıyor** ama input_applied son değerinde kalıyor. Action timing analizi için sorun: sahte zero-crossing'ler üretiyor.
 3. **Reset'te hızlar tam sıfırlanmıyor** — Ludolph ikisinin de sıfır olmasını istiyor. Başlangıç koşulları karşılaştırılabilir olmuyor.
-4. **valid_trial her trial'da 1**, invalid_reason hiç dolmuyor (ölü controller trial'ları dahil).
+4. **`valid_trial` neredeyse hep 1.** 636 trial'ın 634'ünde 1; sadece P011 T030 ve T034'te 0 ve `invalid_reason = "paused"`. Yani mekanizma çalışıyor ama tek durum için. Asıl açık bizim tarafımızda: `flag_trials` bu kolona bakmıyor, o iki trial `qc_pass` ve maskeye giriyor. İncelendi, veri normal (1200 tam sample, focus kaybı yok, davranış olağan); 600'de 2, düşük etkili — ama kural eklenmeli.
 5. **Metadata'da eksik alanlar**: ekran boyutu/çözünürlük/izleme mesafesi, input deadzone, noise texture parametreleri, balance eşikleri. Tam liste: `Documentation/Veri_Kayit_Istekleri.md` §6.
 6. **within_bounds_time_s** failure limitini (60°/5 m) kullanıyor, her trial'da ~19.95 s çıkıyor; ayrı ve daha dar bir eşik seçilmeli.
 7. **Sample düzeyinde frame timing yok** — düşük öncelikli.
@@ -214,18 +258,20 @@ X  : sınıflandırılmayan      banddan geçici geçiş / dejenere işaret
 
 Eşikler `config.yaml` → `build`: `input_neutral_band: 0.02`, `neutral_transient_max_samples: 3`.
 
-Band 0.02 seçildi çünkü örneklerin **%73.5'i tam sıfır**, sıfır olmayan en küçük değer ~0.015 — Unity deadzone'u zaten uygulamış. `input_raw` ile `input_applied` birebir aynı (max fark 0.000000), iki kolon gereksiz.
+Band 0.02 seçildi çünkü örneklerin **%73.9'u tam sıfır**, sıfır olmayan en küçük değer 0.0153 — deadzone zaten uygulanmış. `input_raw` ile `input_applied` birebir aynı (max fark 0.000000), iki kolon gereksiz.
 
-### Mevcut dağılım (7 katılımcı, active örnekler)
+**Girdi cihazı `Xbox Controller`** (metadata `input_device`), yani analog kol — klavye değil. Sıfır olmayan 136 farklı büyüklük, ~0.0098 adımlarla nicelenmiş; doyuma giden örnekler sıfır olmayanların ~%5'i. Girdi dereceli. %73.9 sıfır, yaylı kolun merkeze dönmesi. Bu Ludolph'un sigmoid varsayımı için iyi haber.
+
+### Mevcut dağılım (12 katılımcı, active örnekler)
 
 ```
-I  73.5%    CR 22.8%    D 3.4%    A 0.29%    X 0.01%
-kuadran: fall 64.2%, safe 35.8%
+I  74.5%    CR 22.5%    D 2.7%    A 0.30%    X 0.01%
+kuadran: fall 63.5%, safe 36.5%
 ```
 
-**A çok seyrek (%0.29).** Park'ta anlamlı bir orandı. Muhtemel sebep: zamanın %64'ü fall kuadranında geçiyor, katılımcılar düşüşle boğuşuyor, dikey civarında ince ayar yapmıyor. Bulgu, bug değil — ama bu seyreklikte istatistiksel olarak kullanılıp kullanılamayacağına NB04'te karar verilecek.
+**A çok seyrek (%0.30).** Park'ta anlamlı bir orandı. Muhtemel sebep: zamanın %63.5'i fall kuadranında geçiyor, katılımcılar düşüşle boğuşuyor, dikey civarında ince ayar yapmıyor. Bulgu, bug değil. NB04'te karara bağlanacaktı ama koşula göre dağılım öncelik dışı bırakıldı (2026-08-31); karar hâlâ açık.
 
-Rejim başına profil Park'ın niteliksel örüntüsüyle uyuşuyor: Failed'da D en yüksek (%28.8) ve CR en düşük (%17.0); Safe'te CR en yüksek (%40.1).
+Rejim başına profil Park'ın niteliksel örüntüsüyle uyuşuyor: Failed'da D en yüksek (%26.5) ve CR en düşük (%19.0); Safe'te CR en yüksek (%38.8).
 
 ## Düşüş sebebi: iki tane var
 
@@ -233,14 +279,14 @@ Rejim başına profil Park'ın niteliksel örüntüsüyle uyuşuyor: Failed'da D
 
 | Sebep | n | Düşüş anında ort. abs(θ) |
 |---|---|---|
-| `angle` — pole ±60°'ye vardı | 814 | 61.0° |
-| `track` — cart ±5 m ray sınırına çarptı | 92 | 21.0° |
+| `angle` — pole ±60°'ye vardı | 1.241 | 61.0° |
+| `track` — cart ±5 m ray sınırına çarptı | 140 | 21.3° |
 
-Örtüşme sıfır, açıklanamayan sıfır. Ray kaynaklı düşüşlerin biri 0.27°'de olmuş — pole dimdikken cart raydan çıkmış. 92'sinin **29'u safe kuadranında**, yani pole dikeye dönerken.
+Örtüşme sıfır, açıklanamayan sıfır. Ray kaynaklı düşüşlerin biri 0.27°'de olmuş — pole dimdikken cart raydan çıkmış. 140'ının **42'si safe kuadranında**, yani pole dikeye dönerken.
 
 Park'ta bunun karşılığı yok. O yüzden `Failed` sadece açı kaynaklı düşüşler için kullanılıyor (Park'la karşılaştırılabilir olan bu), ray kaybına ayrı `TrackLoss` etiketi veriliyor ve Park karşılaştırmalarından çıkarılıyor.
 
-Rejim dağılımı: Safe %44.9, Saved %44.6, Failed %7.5, censored %2.2, TrackLoss %0.8.
+Rejim dağılımı: Safe %45.4, Saved %45.2, Failed %6.6, censored %2.1, TrackLoss %0.7.
 
 
 
@@ -272,21 +318,27 @@ T₀ = (θ₀, ω=0) durumundan sıfır kuvvetle |θ| = 60°'ye varana kadar ge�
 
 Gerçek episode'larda: ort 2.93 s, aralık 2.17–9.68 s.
 
-**Ampirik doğrulama (NB02 §2b).** Katılımcının hiç girdi vermediği ve açı limitiyle biten episode'lar tanım gereği serbest düşüştür — süreleri T₀'a eşit olmalı. Böyle 5 episode var ve beşinde de `duration/T₀ = 1.0000`, standart sapma sıfır. Fizik modeli, RK4 adımı, T₀ hesabı ve episode segmentasyonu zincirinin tamamı tek testte doğrulanmış oluyor. Kod: `build.validate_T0_freefall`.
+**Ampirik doğrulama (NB02 §2b).** Katılımcının hiç girdi vermediği ve açı limitiyle biten episode'lar tanım gereği serbest düşüştür — süreleri T₀'a eşit olmalı. Böyle 11 episode var ve on birinde de `duration/T₀ = 1.0000`, standart sapma sıfır. Fizik modeli, RK4 adımı, T₀ hesabı ve episode segmentasyonu zincirinin tamamı tek testte doğrulanmış oluyor. Kod: `build.validate_T0_freefall`.
 
 ### Ludolph'un T/T₀'ı aynen aktarılamaz
 
-Ludolph'ta trial düşünce **biter**, o yüzden T değişken ve T/T₀ anlamlı. Bu pilotta trial sabit 20 s, düşüş olunca reset olup devam ediyor — T hep ≈20 s, dolayısıyla T/T₀ = 20/T₀ oluyor, yani saf θ₀ fonksiyonu. Ölçülen: `corr(|θ₀|, trial T/T₀) = +0.975`. Performans ölçmüyor.
+Ludolph'ta trial düşünce **biter**, o yüzden T değişken ve T/T₀ anlamlı. Bu pilotta trial sabit 20 s, düşüş olunca reset olup devam ediyor — T hep ≈20 s, dolayısıyla T/T₀ = 20/T₀ oluyor, yani saf θ₀ fonksiyonu. Ölçülen: `corr(|θ₀|, trial T/T₀) = +0.972`. Performans ölçmüyor.
 
 Doğru karşılık **episode düzeyi**: her episode kendi başlangıç açısından başlar (trial başı ya da düşüş sonrası restart), süresi düşüşe ya da trial sonuna kadardır.
 
 | Ölçüt | corr(&#124;θ₀&#124;, ölçüt) |
 |---|---|
-| Trial düzeyi T/T₀ | +0.975 |
-| Episode düzeyi T_ep/T₀ | +0.116 |
-| Episode süresi (ham) | −0.091 |
+| Trial düzeyi T/T₀ | +0.972 |
+| Episode düzeyi T_ep/T₀ | +0.128 |
+| Episode süresi (ham) | −0.078 |
 
-Not: ham episode süresi zaten başlangıç açısından neredeyse bağımsız; T₀'a bölmek hafif aşırı düzeltiyor. NB03'te ikisi de bakılır, hangisinin kullanılacağına orada karar verilir. Trial sonuna kadar giden episode'lar sağdan sansürlü (1107 episode'un 350'si), bu ayrıca ele alınmalı.
+**NB03 kararı: bağımsız bir süre metriği kullanılmıyor, T/T₀ reddedildi.** Üç aday da ayrı sebeplerle elendi:
+
+- `mean_episode_s` düşüş sayısının deterministik dönüşümü. Trial sabit 20 s ve episode sayısı = düşüş + 1 olduğu için ortalama episode süresi tam olarak 20/(düşüş+1); `corr = 1.0000`. Yeni bilgi taşımıyor.
+- T₀'a bölmek düzeltmiyor, **fazla düzeltiyor**. Episode düzeyinde ham sürenin θ₀ korelasyonu −0.075 iken bölünmüş hali +0.141; katılımcı × koşul düzeyinde 0.229'a karşı **0.645**. Ludolph'un normalizasyonu bu tasarımda kirliliği artırıyor.
+- Sansürsüz sürümler hayatta kalma yanlılığı taşıyor. Sansürlü episode = "trial sonuna kadar düşmedi", yani en iyi denemeler. Atılınca no_noise ortalaması 12.10 s → 7.38 s'ye düşüp en **düşük** koşul oluyor, N4 etkisi işaret değiştiriyor (dz −1.03 → +0.25).
+
+Ludolph'un süre ölçütünü düzgün kullanmak sağ sansürü ele alan survival analizi ister (1.756 measurement episode'un 600'ü sansürlü). Gerekirse NB05. Pilot kararı için `falls_angle_per_trial` aynı bilgiyi taşıyor.
 
 ## Ek metrikler ve sinyal işleme
 
@@ -294,8 +346,21 @@ Not: ham episode süresi zaten başlangıç açısından neredeyse bağımsız; 
 - **sIQR_theta** = (Q75(θ) − Q25(θ)) / 2
 - **sIQR_omega** = aynısı angular velocity için
 - sIQR'ın gerekçesi: iki katılımcının maPA'sı aynı olabilir ama biri çoğunlukla ±5° durup ara sıra ±50°'ye giderken diğeri sürekli ±15°'te olabilir. RMS birinciyi orantısız cezalandırır. sIQR_omega açı büyüklüğünden bağımsız olarak hareketin ne kadar dalgalı olduğunu ölçer.
-- NB03'te bunların RMS'in üstüne bilgi getirip getirmediği KONTROL EDİLECEK, getirmiyorsa kullanılmayacak.
+- **NB03'te kontrol edildi, ikisi de karar setine girmiyor.** Kriter: katılımcı içi merkezlenmiş artığın koşul profilinde lineer kontrastın ne kadarı hayatta kalıyor. sIQR_theta RMS'in neredeyse kopyası (r=0.85), trendin %9'u kalıyor. sIQR_omega ayrı bir konstrukt (r=0.60 — "açı büyüklüğünden bağımsız salınım" beklentisi doğru) ama trendin %79'unu yine RMS açıklıyor, kalan %21 ters işaretli. maPA da RMS'in kopyası (r=0.98, trendin %6'sı) — ikisinden sadece biri raporlanmalı. Üçü de `trial_metrics.parquet`'te duruyor; sIQR_omega hâlâ betimleyici olarak kullanılabilir (NB04'te kullanılmadı).
 - Gerektiğinde filtre: action onset tespiti, force derivative, jerk, küçük salınımlar (scipy.signal).
+
+## Belgelendirme
+
+Kod ve sayılar burada, **gerekçeler `Documentation/` altında.** Bir metrik bir karara giriyorsa `Documentation/Yontem/` altında kaydı olur: tanım, kod referansı, hangi seçenekler vardı ve neden bu seçildi, kanıt, neyi beslediği. Literatürden aynen alınmayan her şey ayrıca işaretlenir.
+
+| Belge | Ne için |
+|---|---|
+| `Documentation/Yontem/` | Hesap başına bir kayıt: 01 veri işleme, 02 fizik/T₀, 03 durum-aksiyon-episode, 04 performans metrikleri, 05 action timing (kararlar + fizibilite + NB04 sonuçları) |
+| `Documentation/Analiz_Gunlugu.md` | Tarihli günlük, yeni giriş üste. Ne zaman ne karara bağlandı |
+| `Documentation/Pilot_Sonuc_Ozeti.md` | Pilotun bulgusu (sunumun metin karşılığı). Klasördeki pptx/docx 26 Ağustos tarihli, sayıları geçersiz |
+| `Documentation/Veri_Kayit_Istekleri.md` | Ekibe giden kayıt formatı istekleri, rev. 2 (12 katılımcı) |
+
+Yeni bir analiz kararı verildiğinde günlüğe bir giriş, ilgili yöntem kaydına bir güncelleme gider. CLAUDE.md bunların özeti değil, tamamlayıcısı — burada güncel sayılar ve çalışma bağlamı durur.
 
 ## Çalışma kuralları
 

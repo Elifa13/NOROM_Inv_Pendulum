@@ -9,7 +9,15 @@
       "Bash(python -c ':*)",
       "Bash(pip install:*)",
       "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
-      "Bash(jupyter kernelspec:*)"
+      "Bash(jupyter kernelspec:*)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import sys;print\\(sys.executable\\)\")",
+      "Bash(python -m jupyter kernelspec list)",
+      "Bash(./.venv/Scripts/python.exe -c \"import gdown, pandas, nbformat; print\\('ok', gdown.__version__\\)\")",
+      "Bash(./.venv/Scripts/python.exe -m pip list)",
+      "Bash(../.venv/Scripts/python.exe -c ' *)",
+      "Bash(cd *)",
+      "Bash(PYTHONIOENCODING=utf-8 ../.venv/Scripts/python.exe -c ' *)"
     ]
   }
 }
