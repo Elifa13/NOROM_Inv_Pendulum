@@ -81,10 +81,18 @@ def condition_labels(samples):
     """noise_level_id -> 'N1 (sigma=0.02)' etiketi, veriden okunur."""
     sig = (samples[samples["practice"] == 0]
            .groupby("noise_level_id")["noise_sigma"].first())
+    # Sigma 2 haneye yuvarlaninca pilot2'nin .005/.010/.015'i ayni etikete
+    # dusuyor; ayrima yeten en az hane secilir.
+    vals = list(sig.values)
+    dec = 4
+    for d in (2, 3, 4):
+        if len({round(float(v), d) for v in vals}) == len(set(vals)):
+            dec = d
+            break
     out = {}
     for cond in CONDITION_ORDER:
         if cond in sig.index:
-            out[cond] = "{}\n(σ={:.2f})".format(cond, sig[cond])
+            out[cond] = "{}\n(σ={:.{}f})".format(cond, sig[cond], dec)
     return out
 
 

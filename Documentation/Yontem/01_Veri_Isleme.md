@@ -2,7 +2,7 @@
 
 **Notebook:** `Data Analysis/Notebooks/01_load_qc.ipynb`
 **Kod:** `src/drive_sync.py`, `src/loader.py`, `src/qc.py`
-**Çıktı:** `data/interim/samples_clean.parquet`, `data/interim/trials_clean.parquet`
+**Çıktı:** `data/<dataset>/interim/samples_clean.parquet`, `.../trials_clean.parquet`
 **Son çalıştırma:** 2026-08-27, 12 katılımcı
 
 ---
@@ -20,12 +20,21 @@ dosya tekrar indirilmez, yerelde olup Drive'da olmayan hiçbir şey silinmez.
 Veri repoya commit edilmez; kodu çalıştıran herkes aynı veriyi kendi diskine
 indirebildiği için git'te tutmanın anlamı yok.
 
-Klasör yapısı `Pendulum_Data/<participant_id>/<session_id>/` ve içinde üç
+Klasör yapısı `<kok>/<participant_id>/<session_id>/` ve içinde üç
 dosya: `<pid>_<sid>_metadata.json`, `_timeseries.csv`, `_trial_summary.csv`.
-Yerel hedef `Data Analysis/data/raw/`.
+Yerel hedef `Data Analysis/data/<dataset>/raw/` (aktif set için bkz. CLAUDE.md "Veri setleri").
 
-**Durum (2026-08-28):** 12 katılımcı × 3 dosya = 36 dosya. Toplama 26–27
-Ağustos'ta yapıldı, sonrasında Drive'a yeni dosya gelmedi.
+**Yol tam üç parça olmalı** (2026-09-04'te eklendi). gdown yolları istenen
+klasöre göre veriyor; daha derin bir yol, içeriye konmuş **başka bir veri
+seti** demek. Eskiden son üç parça alınıyordu ve pilot2'nin `DataV2/` alt
+klasörü pilot1 çekilirken pilot1'in klasörüne iniyordu — katılımcı id'leri
+çakıştığı için sessizce karışıyordu. Artık `P\d+/S\d{8}_\d{6}/<pid>_<sid>_*`
+kalıbına uymayan girdi indirilmiyor ve atlananlar sayısıyla birlikte
+yazdırılıyor. Pilot1 çekilirken 28 girdinin atlandığını söyleyen uyarı
+beklenen davranıştır.
+
+**Durum:** pilot1 12 katılımcı × 3 dosya = 36 dosya (26–27 Ağustos 2026);
+pilot2 9 katılımcı × 3 dosya = 27 dosya (2–3 Eylül 2026).
 
 ## 2. Yükleme
 

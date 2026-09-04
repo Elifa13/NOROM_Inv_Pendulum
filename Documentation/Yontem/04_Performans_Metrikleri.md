@@ -3,7 +3,7 @@
 **Notebook:** `Data Analysis/Notebooks/03_performance.ipynb`
 **Kod:** `src/performance.py`
 **Config:** `config.yaml` → `performance`
-**Çıktı:** `data/interim/trial_metrics.parquet` (600 trial), `participant_condition.parquet` (60 hücre)
+**Çıktı:** `data/<dataset>/interim/trial_metrics.parquet`, `participant_condition.parquet` (pilot1: 600 trial / 60 hücre, pilot2: 450 / 45)
 
 ---
 

@@ -10,11 +10,16 @@ Beklenen uzak yapi:
                                              /<pid>_<sid>_trial_summary.csv
 """
 
+import re
 from pathlib import Path
 
 import gdown
 
 WANTED_SUFFIXES = ("_metadata.json", "_timeseries.csv", "_trial_summary.csv")
+
+# Beklenen yol tam olarak uc parca: <participant>/<session>/<dosya>
+PID_RE = re.compile(r"^P\d+$")
+SID_RE = re.compile(r"^S\d{8}_\d{6}$")
 
 
 def _list_remote(folder_id):
@@ -30,17 +35,33 @@ def _list_remote(folder_id):
         return []
 
     out = []
+    skipped = []
     for e in entries:
         rel = Path(str(e.path)).as_posix()
-        # gdown yolun basina kok klasor adini koyabilir; parcalara ayirip
-        # sondan uc seviyeyi (participant/session/dosya) aliriz.
         parts = rel.split("/")
-        if len(parts) < 3:
-            continue
-        parts = parts[-3:]
-        if not parts[2].endswith(WANTED_SUFFIXES):
+        # gdown yollari istenen klasore GORE veriyor. Daha derin bir yol
+        # baska bir veri setinin ic ice konmus klasoru demek -- eskiden
+        # sondan uc parca alindigi icin sessizce ayni veri setine
+        # karisiyordu. Artik tam uc parca sart.
+        ok = (
+            len(parts) == 3
+            and PID_RE.match(parts[0])
+            and SID_RE.match(parts[1])
+            and parts[2].startswith(f"{parts[0]}_{parts[1]}")
+            and parts[2].endswith(WANTED_SUFFIXES)
+        )
+        if not ok:
+            skipped.append(rel)
             continue
         out.append((e.id, "/".join(parts)))
+
+    if skipped:
+        print(f"UYARI: beklenen yapiya uymayan {len(skipped)} girdi atlandi "
+              f"(ic ice klasor / baska veri seti olabilir):")
+        for rel in skipped[:5]:
+            print(f"  {rel}")
+        if len(skipped) > 5:
+            print(f"  ... ve {len(skipped) - 5} tane daha")
 
     return sorted(out, key=lambda x: x[1])
 

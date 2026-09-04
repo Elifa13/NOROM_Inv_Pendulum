@@ -1,7 +1,7 @@
 # Ham ve turetilmis veri git'e girmez. Kaynak Google Drive.
-Data Analysis/data/raw/**
-Data Analysis/data/interim/**
-Data Analysis/data/processed/**
+# Her veri seti kendi alt klasorunde: data/pilot1/, data/pilot2/, ...
+Data Analysis/data/**
+!Data Analysis/data/**/
 !Data Analysis/data/**/.gitkeep
 
 # Eski konum

@@ -77,7 +77,12 @@ def check_structural_integrity(df_trials, metadata, config):
             order = tuple(meta.get("condition_order", []))
             if order:
                 orders.setdefault(order, []).append(pid)
-            seed = meta.get("config", {}).get("randomizationSeed")
+            # Pilot 2'den itibaren metadata'da effective_randomization_seed
+            # var: config.randomizationSeed sabit kalsa da RNG oturum basina
+            # yeniden tohumlaniyor. Varsa etkili olan odur.
+            seed = meta.get("effective_randomization_seed")
+            if seed is None:
+                seed = meta.get("config", {}).get("randomizationSeed")
             if seed is not None:
                 seeds.setdefault(seed, []).append(pid)
 
@@ -96,7 +101,7 @@ def check_structural_integrity(df_trials, metadata, config):
                     "participant_id": ", ".join(sorted(pids)),
                     "check": "shared_randomization_seed",
                     "status": "WARN",
-                    "detail": f"randomizationSeed={seed}, {len(pids)} katilimcida ayni",
+                    "detail": f"etkili seed={seed}, {len(pids)} katilimcida ayni",
                 })
 
     # metadata icindeki participantId gercek katilimci ile uyusuyor mu

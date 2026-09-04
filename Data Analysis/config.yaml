@@ -1,12 +1,31 @@
 # Analysis configuration
 # null degerler: o kural gercek veri gelene kadar atlanir
 
-paths:
-  raw_dir: "data/raw"
-  interim_dir: "data/interim"
+# --- Veri setleri -------------------------------------------------------
+# Iki bagimsiz pilot var. Katilimci id'leri iki sette de P001... diye
+# gidiyor ama AYNI KISILER DEGIL; setler hicbir asamada birlestirilmez,
+# ayrim klasor duzeyinde. Aktif set notebook'un ilk hucresindeki DATASET
+# degiskeniyle secilir (src/dataset.load_config).
+dataset: pilot1
 
-drive:
-  folder_id: "1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6"
+datasets:
+  pilot1:
+    label: "Pilot 1 -- 12 katilimci, 26-27 Agustos 2026"
+    raw_dir: "data/pilot1/raw"
+    interim_dir: "data/pilot1/interim"
+    processed_dir: "data/pilot1/processed"
+    drive_folder_id: "1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6"
+    # Referans; kod sigmayi veriden okur, buraya bakmaz. NB01 karsilastirir.
+    noise_sigmas: {no_noise: 0.0, N1: 0.02, N2: 0.05, N3: 0.08, N4: 0.25}
+  pilot2:
+    label: "Pilot 2 -- 9 katilimci, 2-3 Eylul 2026"
+    raw_dir: "data/pilot2/raw"
+    interim_dir: "data/pilot2/interim"
+    processed_dir: "data/pilot2/processed"
+    drive_folder_id: "1oge-PfEM-ZOmmlpWoqIZF7P1yT3f-J3V"
+    # Merdiven tamamen degisti: hepsi pilot1'in N1'inin (0.02) altinda/esiti.
+    # ETIKETLER AYNI, ANLAMLARI DEGIL -- setler arasi karsilastirma sigma ile.
+    noise_sigmas: {no_noise: 0.0, N1: 0.005, N2: 0.010, N3: 0.015, N4: 0.020}
 
 experiment:
   practice_trials: 3
@@ -163,4 +182,4 @@ presentation:
   # Esik taramasi: "basarili dengeleme" tanimini degistirince sonuc
   # degisiyor mu. Ana figurler yine success_angle_deg ile cizilir.
   threshold_sweep_deg: [5, 10, 15, 20, 25, 30, 45]
-  raw_dir_for_check: "data/raw"
+  # raw_dir_for_check: aktif veri setinden gelir (src/dataset.load_config)

@@ -8,17 +8,30 @@ Cart-pole dengeleme görevinde görsel noise seviyelerinin motor öğrenmeye etk
 
 Veriyi ben analiz ediyorum, deneyi ben yapmıyorum, tasarımı değiştiremem. Kayıt tarafına sadece "şu alanı da kaydedin" diyebiliyorum (bkz. `Documentation/Veri_Kayit_Istekleri.md`).
 
-## Veri durumu
+## Veri setleri
 
-2026-08-28 itibariyle Drive'da **12 katılımcı** var (P001–P012), hepsi gerçek. Eski smoke test verisi (P001/P002) silindi, artık Drive'da yok. Toplama 26–27 Ağustos'ta yapıldı; 28 Ağustos'ta Drive'da yeni dosya yok. Sayı NB01'in ilk hücresi çalıştırıldığında güncellenir.
+**İki bağımsız pilot var, birbirine karıştırılmaz.** Katılımcı id'leri iki sette de P001… diye gidiyor ama aynı kişiler değil; koşul etiketleri de (N1–N4) aynı ama aynı sigma değil. Setler arası her karşılaştırma **sigma üzerinden** yapılır, etiketle değil.
 
-Her katılımcı tek oturum, 53 trial (3 practice + 50 measurement). Davranışsal analiz yapılabilir. Randomizasyon durumu için bkz. "Veride görülen sorunlar" §1.
+| Set | n | Toplama | Noise merdiveni (σ) | Drive id | Veri |
+|---|---|---|---|---|---|
+| `pilot1` | 12 (P001–P012) | 26–27 Ağustos 2026 | 0 / .02 / .05 / .08 / .25 | `1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6` | `data/pilot1/` |
+| `pilot2` | 9 (P001–P009) | 2–3 Eylül 2026 | 0 / .005 / .010 / .015 / .020 | `1oge-PfEM-ZOmmlpWoqIZF7P1yT3f-J3V` | `data/pilot2/` |
+
+Her katılımcı tek oturum, 53 trial (3 practice + 50 measurement). Randomizasyon durumu için bkz. "Veride görülen sorunlar" §1 — sorun pilot1'e ait, pilot2'de düzelmiş.
+
+**Drive tarafında tuzak:** pilot2 klasörü, pilot1'in `Pendulum_Data` klasörünün **içinde** duruyor (`DataV2/` alt klasörü olarak). `drive_sync._list_remote` eskiden yolun son üç parçasını alıyordu, o yüzden pilot1 çekilince pilot2'nin dosyaları da pilot1'e iniyordu ve katılımcı id'leri çakıştığı için ayırt edilemiyorlardı (2026-09-04'te bir kez oldu, temizlendi). Artık yol **tam üç parça** olmak zorunda (`P\d+/S\d{8}_\d{6}/<pid>_<sid>_*`); daha derin girdiler indirilmez, atlananlar uyarı olarak basılır. Pilot1 çekildiğinde 28 girdinin atlandığını söyleyen uyarı **normaldir**.
+
+### Set seçimi
+
+`config.yaml` → `datasets` bloğu her setin `raw_dir` / `interim_dir` / `processed_dir` / `drive_folder_id` değerlerini tutuyor. Aktif set notebook'un ilk hücresindeki `DATASET` değişkeni; yolları `src/dataset.load_config` çözüp `config["paths"]` içine yazıyor, `dataset.dirs` de klasörleri döndürüp interim'e bir `.dataset` damgası bırakıyor (yanlış set yanlış klasöre yazmaya kalkarsa hata).
+
+Zincir iki kez var: `Notebooks/` = pilot1, `Notebooks/pilot2/` = pilot2. Tek fark ilk hücredeki `DATASET`. `src/` çoğaltılmadı, analiz kodu veri setinden bağımsız.
 
 ## Veri
 
 ### Kaynak
 
-Google Drive klasörü `Pendulum_Data`, id `1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6`
+İki Drive klasörü (yukarıdaki tabloya bak), ikisi de aynı yapıda.
 
 Klasör "bağlantıya sahip herkes" olarak paylaşıldığı için kimlik doğrulama yok: API anahtarı, OAuth, `client_secrets.json`, `rclone config` — hiçbiri gerekmiyor. `src/drive_sync.py` `gdown` ile klasörü listeler, sadece beklenen üç dosya tipini indirir. Var olan dosya tekrar indirilmez, yerelde olup Drive'da olmayan hiçbir şey silinmez (sync değil, copy semantiği). Veri repoya commit edilmez.
 
@@ -33,7 +46,7 @@ Pendulum_Data/
         └── <pid>_<sid>_trial_summary.csv
 ```
 
-Lokal hedef: `Data Analysis/data/raw/`
+Lokal hedef: `Data Analysis/data/<dataset>/raw/`
 
 ### metadata.json — oturumda bir kez
 
@@ -49,7 +62,9 @@ Mevcut alanlar: `participant_id`, `session_id`, `created_at`, `unity_version`, `
 
 ### Veri katmanları
 
-Raw Sample (FixedUpdate satırı) → Clean Sample (preprocessed) → Event (onset / offset / reversal / fall) → **Regime run** (Safe / Saved / Failed / TrackLoss) → **Episode** (reset'ten reset'e) → Trial → Participant × Condition (10 tekrarın özeti)
+Raw Sample (FixedUpdate satırı) → Clean Sample (preprocessed) → **Girdi olayı** (`input_events`: onset / offset / reversal) ve **Durum olayı** (`state_events`: pole tamsayı açıyı düşerken geçiyor) → **Regime run** (Safe / Saved / Failed / TrackLoss) → **Episode** (reset'ten reset'e) → Trial → Participant × Condition (10 tekrarın özeti)
+
+Düşüş (`fall`) bir girdi olayı değil, sample kolonunda (`fall_event`) tutuluyor. Episode ve regime run ikisi de doğrudan sample tablosundan türetiliyor, biri diğerinden değil (`build.build_all`); aralarındaki ilişki kapsama: koşular episode sınırını aşmaz.
 
 Episode ve regime run **aynı şey değil**, karıştırılmamalı:
 
@@ -112,13 +127,17 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 
 ## Noise seviyeleri
 
-| Koşul | noise_sigma | Not |
+Etiketler aynı, sigmalar farklı. Kod sigmayı hep veriden okur (`config.yaml` → `datasets.*.noise_sigmas` sadece referans).
+
+| Koşul | pilot1 σ | pilot2 σ |
 |---|---|---|
-| no_noise | 0.00 | Noise üretimi kapalı |
-| N1 | 0.02 | Düşük |
-| N2 | 0.05 | Orta-düşük |
-| N3 | 0.08 | Orta |
-| N4 | 0.25 | Yüksek |
+| no_noise | 0.00 | 0.000 |
+| N1 | 0.02 | 0.005 |
+| N2 | 0.05 | 0.010 |
+| N3 | 0.08 | 0.015 |
+| N4 | 0.25 | 0.020 |
+
+pilot2'nin en yükseği (0.020) pilot1'in en düşüğüne (0.02) eşit — iki setin tek örtüşme noktası.
 
 ## Notebook zinciri
 
@@ -129,7 +148,16 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 | 03 | Performance | Trial düzeyi metrikler, metrik seti seçimi, katılımcı × koşul birimine toplama. Çıktı: `trial_metrics` / `participant_condition` parquet |
 | 04 | Control mechanism | Action timing (Ludolph), variability, velocity stratification, açı bandı taraması. Çıktı: `state_events` / `timing_cells` parquet. I/CR/D/A dağılımı öncelik dışı bırakıldı |
 | 05 | Learning | Pilotta işi varyans/güç tahmini; koşullar arası öğrenme karşılaştırması DEĞİL |
-| 06 | Noise kararı | Friedman + Wilcoxon/Holm, lineer ve kuadratik trend kontrastı (SR testi), duyarlılık, aday sıralaması. Çıktı: `data/processed/karar/` |
+| 06 | Noise kararı | Friedman + Wilcoxon/Holm, lineer ve kuadratik trend kontrastı (SR testi), duyarlılık, aday sıralaması. Çıktı: `data/<dataset>/processed/karar/` |
+
+**İzole notebook'lar** (zincirin parçası değil, silinseler zincir etkilenmez):
+
+| # | Notebook | İçerik |
+|---|---|---|
+| 90 | `90_sunum.ipynb` | Acil sunum figürleri. `src/presentation.py` kullanır |
+| 91 | `91_control_variability.ipynb` | Frequency analysis ve entropy ile kontrol değişkenliği taraması. Sonuç: koşul etkisi yok; spektral yöntem bu segment uzunluğunda çözünürlük sınırında |
+| 92 | `92_varyans_ayrisimi.ipynb` | Varyans ayrışımı (kişi / koşul / artık), ICC, split-half güvenilirlik, öğrenme kontrolü. Sonuç: kişiye özel optimum bu deneme sayısıyla ölçülemiyor |
+| 93 | `93_ogrenme_ve_varyans.ipynb` | Trial düzeyi varyans ayrışımı (kişi / koşul / öğrenme / artık), koşul başına öğrenme eğimi, eğimin güvenilirliği |
 
 02 var çünkü 03 ve 04 aynı türetmeyi iki kere yapmasın. 04, 05'ten önce çünkü learning kriteri action timing'i girdi olarak kullanıyor. Drive'dan veri çekme NB01'in ilk hücresi (`src/drive_sync.py`).
 
@@ -153,6 +181,8 @@ Not: Ludolph'ta yerçekimi performansa göre 3.5 m/s²'ye yükseliyordu; pilot n
 
 ## Notebook 03 kararları
 
+*Aşağıdaki sayılar pilot1'e ait; kararlar (metrik seti, eşikler) iki sette de aynı.*
+
 **Karar metrik seti (NB06'ya giden):**
 
 | Metrik | Yön | Not |
@@ -167,11 +197,13 @@ Dışarıda: sIQR'lar, süre metrikleri (yukarıdaki iki bölüm), `falls_track_
 
 **Stabilizasyon süresi kendi eşiğimizle hesaplanıyor.** Unity'nin `within_bounds_time_s`'i failure limitini kullandığı için 600 trial'da ort. 19.97 s, sd 0.04 — tavana yapışık, koşulları ayırt etmiyor. |θ| ≤ 30° eşiğiyle ort. 18.22 s, sd 1.67.
 
-**Düşüş sayımı üç kaynakta tutuyor:** sample düzeyi `fall_event` toplamı, sebebe göre ayrılmış toplam (açı 1.025 + ray 131) ve Unity'nin `fall_count`'u — 600 measurement trial'ın 600'ünde birebir aynı.
+**Düşüş sayımı üç kaynakta tutuyor** (measurement trial, practice hariç): sample düzeyi `fall_event` toplamı, sebebe göre ayrılmış toplam (açı 1.025 + ray 131) ve Unity'nin `fall_count`'u — 600 measurement trial'ın 600'ünde birebir aynı.
 
 **Betimleyici sonuç:** bütün ana metriklerde aynı şekil — no_noise ile N1 yapışık, N2'den itibaren monoton bozulma. maPA'da N2/N3/N4 katılımcıların 11/12'sinde baseline'dan kötü (dz 0.96–1.18), N1'de fark yok (dz −0.03, 6/12). **U şekli yok.** Testler NB06'da.
 
 ## Notebook 04 kararları
+
+*Sayılar pilot1'e ait; pilot2 karşılığı `Pilot2_Sonuc_Ozeti.md`'de, sonuçlar aynı yönde.*
 
 Kod `src/timing.py`, eşikler `config.yaml` → `timing`, gerekçeler `Yontem/05_Action_Timing.md` §5. Çıktı `state_events.parquet` (91.165 olay) ve `timing_cells.parquet`.
 
@@ -193,7 +225,7 @@ Kod `src/timing.py`, eşikler `config.yaml` → `timing`, gerekçeler `Yontem/05
 - **Action variability ayrı bilgi taşımıyor.** Gürültüyle düşüyor (N4 dz −0.77) ama amplitude'a bölününce kayboluyor (dz −0.27) — kuvvet küçülüyor, tutarlılık artmıyor.
 - **P007 iki bağımsız ölçüde de aykırı:** tek reaktif kişi (+126 ms) ve NB02'de D oranı %15.2 (diğerleri ~%2).
 
-## Notebook 06 sonucu: karar
+## Notebook 06 sonucu: pilot1 kararı
 
 Kod `src/decide.py`, gerekçeler `Yontem/06_Karar_Istatistigi.md`, sonuç metni `Pilot_Sonuc_Ozeti.md`. Analiz birimi katılımcı × koşul, n = 12, bütün testler within-subject ve non-parametrik.
 
@@ -211,15 +243,35 @@ Kod `src/decide.py`, gerekçeler `Yontem/06_Karar_Istatistigi.md`, sonuç metni 
 
 **Nüans:** grup ortalamasında üç metrikte de sayısal en iyi koşul N1 — tepe iç bir koşulda. Ama fark gürültünün içinde ve kuadratik null; bu U değil, no_noise ile N1'in ayırt edilemezliği. Composite'te kimsenin en iyisi N3/N4 değil (6 no_noise, 5 N1, 1 N2).
 
-**Duyarlılık:** P011'in iki `paused` trial'ı çıkarılınca hiçbir p oynamıyor. Stabilizasyon eşiği 10°–45° taramasında her eşikte lineer anlamlı, hiçbirinde kuadratik anlamlı değil.
+**Duyarlılık:** P011'in iki `paused` trial'ı çıkarılınca sadece `stab_time_s` kuadratiği oynuyor (0.57 → 0.62), ikisi de anlamlılıktan uzak. Stabilizasyon eşiği 5°–45° taramasında her eşikte lineer anlamlı, hiçbirinde kuadratik anlamlı değil.
 
 **Aday sıralaması:** 1) N1 (σ=0.02) — noise var ama performansı bozmuyor. 2) N2 (σ=0.05) — etkisi ölçülebilir en düşük seviye. N3/N4 eleniyor. **Sıra, ana deneyin tasarımına bağlı** (bkz. Açık sorular).
+
+## Pilot 2 sonucu
+
+Kod aynı (`Notebooks/pilot2/`), analiz birimi katılımcı × koşul, n = 9. Ayrıntı `Documentation/Pilot2_Sonuc_Ozeti.md`.
+
+**Bu merdivende koşul etkisi yok.** Pilot2'nin seviyeleri (σ ≤ 0.02) pilot1'in "etkisiz" bölgesinin içinde kalıyor ve orada da hiçbir şey olmuyor.
+
+| Metrik | Friedman p | Kendall W | Lineer p | Kuadratik p |
+|---|---|---|---|---|
+| `mae_angle_deg` | 0.73 | 0.06 | 0.50 | 0.57 |
+| `stab_time_s` | 0.41 | 0.11 | 0.73 | 0.20 |
+| `falls_angle_per_trial` | 0.16 | 0.18 | 0.98 | 1.00 |
+
+Hiçbir koşul baseline'dan ayrılmıyor (en büyük dz 0.57 ve yönü "gürültü iyileştiriyor" tarafında). Eşleşmiş dz'ler ≤ 0.2 → n=9 ile bu büyüklükte etkinin yakalanma gücü %8; "fark yok" değil, "saptanamaz".
+
+**İki pilot birlikte:** σ ≈ 0.02'ye kadar performans değişmiyor, üstünde monoton bozuluyor. Dokuz farklı seviye ve 21 katılımcıda ters-U yok — **stochastic resonance desteklenmiyor.**
+
+Diğer bulgular pilot1'i tekrarlıyor: action timing predictive (−43.5 ms, CI −46.5…−39.7) ama koşula duyarsız (koşul yayılımı 19.6 ms, kişi yayılımı 138 ms); NB91'in dokuz ölçütünde koşul etkisi yok; kişiye özel optimum ölçülemiyor (koşul sıralaması split-half rho ≈ 0); öğrenme var (−1.98°/50 deneme, 7/9 kişi) ve koşuldan bağımsız (Friedman p = 0.73).
+
+Pilot2'de action sınıfları: I %78.7, CR %19.2, D %1.7, A %0.4 (pilot1: 74.5 / 22.5 / 2.7 / 0.30). Kuadrant: fall %61.8, safe %38.2.
 
 ## Veride görülen sorunlar
 
 Önem sırasına göre. 1 ve 8 gerçek veride doğrulandı, geri kalanı hâlâ "bakılacak" listesinde:
 
-1. **randomizationSeed 12345'e sabitlenmiş.** Veriden doğrulandı (metadata'ya bakmadan, NB01 §7):
+1. **randomizationSeed 12345'e sabitlenmiş — pilot1'e ait, pilot2'de DÜZELMİŞ.** Pilot2 metadata'sında yeni bir `effective_randomization_seed` alanı var, 9 katılımcıda 9 farklı değer; veriden doğrulandı: 9 farklı koşul sırası, 9 farklı `noise_seed` dizisi, ortak başlangıç açısı yok. Aşağısı pilot1'i anlatıyor. Veriden doğrulandı (metadata'ya bakmadan, NB01 §7):
 
    - **Koşul sırası özdeş** — bütün katılımcılar aynı 50 trial'lık diziyi alıyor.
    - **noise_seed dizisi özdeş** — herkes aynı noise desenini görmüş.
@@ -242,7 +294,8 @@ Kod `src/decide.py`, gerekçeler `Yontem/06_Karar_Istatistigi.md`, sonuç metni 
 5. **Metadata'da eksik alanlar**: ekran boyutu/çözünürlük/izleme mesafesi, input deadzone, noise texture parametreleri, balance eşikleri. Tam liste: `Documentation/Veri_Kayit_Istekleri.md` §6.
 6. **within_bounds_time_s** failure limitini (60°/5 m) kullanıyor, her trial'da ~19.95 s çıkıyor; ayrı ve daha dar bir eşik seçilmeli.
 7. **Sample düzeyinde frame timing yok** — düşük öncelikli.
-8. **`config.participantId` hiç güncellenmiyor** — P002–P005'in metadata'sında da "P001" yazıyor. `participant_id` alanı doğru, sadece `config` bloğundaki kopya yanlış. NB01'de `config_participant_id` kontrolü WARN veriyor.
+8. **Drive'da iç içe klasör.** pilot2, pilot1 klasörünün içinde (`DataV2/`). `drive_sync` düzeltildi (tam üç parça şartı + atlananları raporlama) ama Drive'a üçüncü bir set yine iç içe konursa aynı tuzak kurulur — yeni set gelince `sync_data`'nın uyarı satırına bakılmalı.
+9. **`config.participantId` hiç güncellenmiyor** — P002–P005'in metadata'sında da "P001" yazıyor. `participant_id` alanı doğru, sadece `config` bloğundaki kopya yanlış. NB01'de `config_participant_id` kontrolü WARN veriyor.
 
 ## Park state ve action tanımları
 
@@ -287,6 +340,8 @@ Rejim başına profil Park'ın niteliksel örüntüsüyle uyuşuyor: Failed'da D
 ## Düşüş sebebi: iki tane var
 
 `fall_event` iki farklı sebeple tetikleniyor ve **ayırt edilmeli**:
+
+Aşağıdaki tablo **bütün trial'ları** kapsıyor (practice dahil). Sadece measurement trial'da sayılar 1.025 açı + 131 ray.
 
 | Sebep | n | Düşüş anında ort. abs(θ) |
 |---|---|---|
@@ -368,7 +423,8 @@ Kod ve sayılar burada, **gerekçeler `Documentation/` altında.** Bir metrik bi
 |---|---|
 | `Documentation/Yontem/` | Hesap başına bir kayıt: 01 veri işleme, 02 fizik/T₀, 03 durum-aksiyon-episode, 04 performans metrikleri, 05 action timing, 06 karar istatistiği |
 | `Documentation/Analiz_Gunlugu.md` | Tarihli günlük, yeni giriş üste. Ne zaman ne karara bağlandı |
-| `Documentation/Pilot_Sonuc_Ozeti.md` | Pilotun bulgusu (sunumun metin karşılığı). Klasördeki pptx/docx 26 Ağustos tarihli, sayıları geçersiz |
+| `Documentation/Pilot_Sonuc_Ozeti.md` | Pilot 1'in bulgusu (sunumun metin karşılığı). Klasördeki pptx/docx 26 Ağustos tarihli, sayıları geçersiz |
+| `Documentation/Pilot2_Sonuc_Ozeti.md` | Pilot 2'nin bulgusu ve iki pilotun birleşik okuması |
 | `Documentation/Veri_Kayit_Istekleri.md` | Ekibe giden kayıt formatı istekleri, rev. 2 (12 katılımcı) |
 
 Yeni bir analiz kararı verildiğinde günlüğe bir giriş, ilgili yöntem kaydına bir güncelleme gider. CLAUDE.md bunların özeti değil, tamamlayıcısı — burada güncel sayılar ve çalışma bağlamı durur.
@@ -385,16 +441,20 @@ Yeni bir analiz kararı verildiğinde günlüğe bir giriş, ilgili yöntem kayd
 
 ## Açık sorular
 
-- **Ana deney tek noise seviyesi + no_noise kontrol grubu mu, yoksa herkes aynı noise'u mu alıyor?** Ekibe soruldu, cevap gelmedi. NB06 çalıştı ama **aday sırası bu cevaba bağlı**: kontrol grubu varsa N2 (N1–baseline farkı bu pilotta saptanamayacak kadar küçük, muhtemelen null çıkar), herkes aynı noise'u alıyorsa N1 (noise öğrenmeyi ölçmeyi engellememeli).
+- **Ana deney tek noise seviyesi + no_noise kontrol grubu mu, yoksa herkes aynı noise'u mu alıyor?** Ekibe soruldu, cevap gelmedi. **Aday sırası bu cevaba bağlı**: kontrol grubu varsa pilot1'in N2'si (σ=0.05, etkisi ölçülebilir en düşük seviye), herkes aynı noise'u alıyorsa σ ≤ 0.02'den herhangi biri (noise öğrenmeyi ölçmeyi engellememeli). Pilot2 bu ikinci durumda seçimi kolaylaştırdı: σ = 0.005–0.020 arasında hangi seviye seçilirse seçilsin performans farkı yok.
 - Pilot anlık performansa bakıyor, ana deney öğrenmeyi ölçecek. Ludolph'un bulgusu bu ikisinin ayrışabileceği yönünde — o yüzden rapora tek seviye değil sıralı iki aday yazıldı.
-- **Güç analizi yok.** N1'in null çıkması "fark yok" değil "bu örneklemle saptanamadı" demek. NB05'in işi.
+- **Güç analizi hâlâ eksik.** Pilot2 özetinde eşleşmiş t-testi için kaba sayılar var (n=9'da dz 0.2 → %8, dz 0.5 → %26, dz 0.8 → %56) ama ana deneyin örneklem hesabı yapılmadı. NB05'in işi.
 - A sınıfı (%0.30) istatistiksel olarak kullanılabilir mi — NB04'te öncelik dışı bırakıldı.
 
 ## Veri kaynağı ve git
 
-Kaynak: Google Drive klasörü `Pendulum_Data`, id `1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6`
-drive link: https://drive.google.com/drive/folders/1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6
+Kaynak, iki klasör:
 
-Yapı: `Pendulum_Data/<participant>/<session>/` ve içinde üç dosya.
+- pilot1 — `1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6`
+  https://drive.google.com/drive/folders/1iDMZt3iUN-mHaemXXI_qNA9GkYUMf5t6
+- pilot2 — `1oge-PfEM-ZOmmlpWoqIZF7P1yT3f-J3V`
+  https://drive.google.com/drive/folders/1oge-PfEM-ZOmmlpWoqIZF7P1yT3f-J3V
 
-Çekme: NB01'in "0. Drive'dan veri çek" hücresi, `sync_data(folder_id, RAW_DIR)`. Kimlik doğrulama yok — klasör herkese açık. Kodu çalıştıran herkes aynı veriyi kendi diskine indirebiliyor, o yüzden git'te tutmaya gerek yok.
+Yapı: `<participant>/<session>/` ve içinde üç dosya.
+
+Çekme: NB01'in "0. Drive'dan veri çek" hücresi, `sync_data(config["drive"]["folder_id"], RAW_DIR)` — ikisi de aktif `DATASET`'ten gelir. Kimlik doğrulama yok — klasör herkese açık. Kodu çalıştıran herkes aynı veriyi kendi diskine indirebiliyor, o yüzden git'te tutmaya gerek yok.

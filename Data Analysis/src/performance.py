@@ -63,10 +63,24 @@ def load_built(interim_dir):
     return samples, episodes, trials
 
 
+def sigma_decimals(sig):
+    """Kosullari birbirinden ayirmaya yeten en az ondalik hane (2..4).
+
+    Pilot 1'in merdiveni 2 haneyle ayrisiyor (.02/.05/.08/.25), pilot 2'nin
+    merdiveni (.005/.010/.015/.020) ayrismiyor -- hepsi 0.01 gorunuyordu.
+    """
+    vals = list(sig)
+    for d in (2, 3, 4):
+        if len({round(float(v), d) for v in vals}) == len(set(vals)):
+            return d
+    return 4
+
+
 def condition_labels(trial_df):
     """noise_level_id -> 'N1 (sigma=0.02)', sigma veriden okunur."""
     sig = trial_df.groupby("noise_level_id")["noise_sigma"].first()
-    return {c: "{} (σ={:.2f})".format(c, sig[c])
+    d = sigma_decimals(sig.values)
+    return {c: "{} (σ={:.{}f})".format(c, sig[c], d)
             for c in CONDITION_ORDER if c in sig.index}
 
 

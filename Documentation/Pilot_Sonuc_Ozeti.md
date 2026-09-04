@@ -4,8 +4,12 @@
 measurement). Toplama 26–27 Ağustos 2026.
 **Analiz:** `Notebooks/06_noise_decision.ipynb`, `src/decide.py`
 (karar metrik seti `03_performance.ipynb`'te seçildi)
-**Çıktılar:** `data/processed/karar/` — `decision_stats.csv`,
+**Çıktılar:** `data/pilot1/processed/karar/` — `decision_stats.csv`,
 `decision_table.csv`
+
+> Bu belge **pilot 1**'i anlatıyor. İkinci pilot (9 kişi, σ ≤ 0.02) için
+> [Pilot2_Sonuc_Ozeti.md](Pilot2_Sonuc_Ozeti.md). İki setin katılımcı id'leri
+> ve koşul etiketleri çakışıyor ama aynı şeyi göstermiyor.
 
 Daha önce bu belge acil sunum notebook'unun (`90_sunum.ipynb`) sayılarını
 taşıyordu. 31 Ağustos'ta NB06 yazıldı ve sayılar zincirin kendi
@@ -43,7 +47,7 @@ Analiz birimi katılımcı × koşul (10 trial'ın ortalaması), n = 12.
 | Cart RMS (m) | belirsiz | 1.09 | 1.13 | 1.02 | 1.14 | 1.04 |
 
 Koşul sıralaması (1 = en iyi, üç karar metriğinin ortalaması):
-**N1 (1.0) → no_noise (2.0) → N3 (3.67) → N4 (4.33) → N2 (4.0)**.
+**N1 (1.0) → no_noise (2.0) → N3 (3.67) → N2 (4.0) → N4 (4.33)**.
 N1 üç metrikte de sayısal olarak en iyi — ama aşağıdaki testlerde
 baseline'dan ayırt edilemiyor.
 
@@ -78,8 +82,10 @@ Eşleşmiş Wilcoxon, Holm düzeltmesi metrik içinde (dört karşılaştırma).
 
 Diğer iki metrikte Holm sonrası yalnız N4 ayakta kalıyor
 (`falls_angle_per_trial` p = 0.039). Üç metrik birbiriyle güçlü ilişkili
-(maPA–RMS r = 0.98), yani bağımsız kanıt değil; metrikler arası ek düzeltme
-yapılmadı.
+(kişi içi merkezlenmiş: maPA–stabilizasyon r = −0.86, maPA–düşüş r = 0.42),
+yani tam bağımsız kanıt değil; metrikler arası ek düzeltme yapılmadı. Sonradan
+hesaplandı, yapılsaydı da değişmezdi: lineer kontrastın üç metriğe Holm
+uygulanmış hali 0.0015 / 0.0049 / 0.0020, üçü de anlamlı kalıyor.
 
 **Kuadratik terim hiçbir metrikte anlamlı değil.** Ters-U olsaydı burada
 görünürdü.
@@ -126,11 +132,12 @@ P004 beraberlikte kalmıştı, şimdi N1'e düşüyor.)
 
 **(a) `valid_trial`.** Unity 600 measurement trial'ın 2'sini `paused` diye
 işaretlemiş (P011 T030, T034); NB01'in kalite kontrolü o kolona bakmıyor, yani
-ikisi de analize giriyor. Çıkarıldığında hiçbir p değeri oynamıyor
-(lineer 0.00049 / 0.0049 / 0.00098, kuadratik 0.62 / 0.62 / 0.58) ve koşul
-sıralaması aynı kalıyor.
+ikisi de analize giriyor. Çıkarıldığında koşul sıralaması aynı kalıyor ve tek
+bir p oynuyor: `stab_time_s` kuadratik 0.57 → 0.62. Diğerleri sabit
+(lineer 0.00049 / 0.0049 / 0.00098, kuadratik 0.62 / 0.62 / 0.58). İkisi de
+anlamlılık eşiğinden uzak, sonuç etkilenmiyor.
 
-**(b) Stabilizasyon eşiği.** 10°–45° arasında tarandı: **her eşikte lineer
+**(b) Stabilizasyon eşiği.** 5°–45° arasında tarandı: **her eşikte lineer
 anlamlı (p ≤ 0.0068), hiçbir eşikte kuadratik anlamlı değil** (p = 0.38–0.57).
 En iyi koşul eşiğe göre no_noise ile N1 arasında gidip geliyor — ikisinin
 ayırt edilemez olduğunun bir başka göstergesi.
@@ -146,7 +153,7 @@ Zincirde bir kayma yok.
 1. **Randomizasyon sabit seed'e bağlı.** Bütün katılımcılar aynı koşul
    sırasını ve aynı noise desenini görüyor. Başlangıç açıları da tek bir
    sabit diziden geliyor. Etkisi ölçüldü ve küçük (koşullar arası başlangıç
-   |θ| yayılımı 0.32°, sonuçla korelasyon +0.066) ve **yönü bulgunun
+   |θ| yayılımı 0.35°, sonuçla korelasyon +0.066) ve **yönü bulgunun
    aleyhine** — en zor başlangıçlar no_noise'da. Ayrıntı: `CLAUDE.md` →
    "Veride görülen sorunlar" §1.
 2. **Pilot anlık performansı ölçüyor, öğrenmeyi değil.** Ludolph'un bulgusu

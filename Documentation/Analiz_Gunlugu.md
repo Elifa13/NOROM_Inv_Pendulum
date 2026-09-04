@@ -8,7 +8,168 @@ cevabın ve o günkü gerekçenin bulunabilmesi. Yöntem ayrıntıları
 
 ---
 
+## 2026-09-04 — İkinci pilot: ayrı veri seti, aynı zincir
+
+Yeni bir Drive klasörü geldi (`1oge-PfEM-ZOmmlpWoqIZF7P1yT3f-J3V`): 9 katılımcı,
+2–3 Eylül oturumları, **başka kişiler**. Katılımcı id'leri gene P001… diye
+gidiyor, yani iki setin dosyaları asla aynı klasörde buluşmamalı.
+
+**Ayrım klasör düzeyinde yapıldı.** `config.yaml`'a `datasets:` bloğu eklendi,
+her setin kendi `data/<dataset>/{raw,interim,processed}` ağacı var; eskisi
+`data/pilot1/` altına taşındı. Aktif set notebook'un ilk hücresindeki `DATASET`
+değişkeniyle seçiliyor, yolları `src/dataset.load_config` çözüyor ve
+`config["paths"]` içine yazıyor — böylece notebook'ların geri kalanı tek satır
+değişmeden çalıştı. `dataset.dirs` interim klasörüne bir `.dataset` damgası
+bırakıyor; yanlış set yanlış klasöre yazmaya kalkarsa hata veriyor.
+
+Zincir kopyalandı: `Notebooks/pilot2/` altında 01–06 ve 91–93, tek fark ilk
+hücredeki `DATASET = "pilot2"`. `src/` hiç çoğaltılmadı — analiz kodu zaten
+sigmayı veriden okuyordu, koşul etiketleri de aynı beş isim.
+
+**Bir tuzak çıktı: pilot2 Drive'da pilot1'in içinde.** Verilen link doğrudan
+`DataV2` klasörüne işaret ediyor ama o klasör `Pendulum_Data`'nın alt klasörü.
+`drive_sync._list_remote` yolun **son üç** parçasını alıyordu, yani
+`DataV2/P001/S.../dosya` ile `P001/S.../dosya` aynı görünüyordu: pilot1
+çekildiğinde pilot2'nin 27 dosyası da pilot1'in klasörüne indi. Katılımcı
+id'leri çakıştığı için gözle de fark edilmesi zor. Bir kez oldu, sızan 9
+oturum silindi, `drive_sync` yolun **tam üç parça** olmasını şart koşacak
+şekilde düzeltildi ve atladığı girdileri artık uyarı olarak basıyor. Pilot1
+NB01 temizlik sonrası yeniden çalıştırıldı: bütün sayılar birebir aynı
+(oturum seçimi zaten kendi oturumlarını seçmişti, sızan oturumlar "yarım"
+listesine düşmüştü). Yeni bir veri seti geldiğinde `sync_data`'nın uyarı
+satırına bakmak gerekiyor.
+
+**Yol boyunca düzeltilen üç şey** (üçü de iki sette de geçerli):
+
+- `qc.check_randomization` artık önce `effective_randomization_seed`'e bakıyor.
+  Pilot 2'de `config.randomizationSeed` hâlâ 12345 ama RNG oturum başına
+  yeniden tohumlanıyor; eski kontrol yanlış WARN veriyordu.
+- Koşul etiketlerindeki sigma 2 haneye yuvarlanıyordu, pilot 2'nin
+  0.005/0.010/0.015'i aynı etikete düşüyordu. Hane sayısı artık koşulları
+  ayırmaya yetecek kadar seçiliyor (pilot 1'in etiketleri değişmedi).
+- NB91 ve NB93'te trial sayısı 600'e sabitlenmişti, veriden türetiliyor.
+  NB93'ün pilot 1 sayılarını basan karşılaştırma satırı da genelleştirildi;
+  NB93 pilot 1 için yeniden çalıştırıldı, bütün sayılar birebir aynı çıktı.
+
+**Sonuç: bu merdivende koşul etkisi yok.** Pilot 2'nin noise seviyeleri
+0 / 0.005 / 0.010 / 0.015 / 0.020 — hepsi pilot 1'in en düşük noise koşuluna
+(N1, σ=0.02) eşit ya da ondan küçük. Üç karar metriğinde de Friedman null
+(p = 0.16–0.73, W ≤ 0.18), lineer de kuadratik de null, hiçbir koşul
+baseline'dan ayrılmıyor.
+
+İki pilot birlikte okununca tablo tamamlanıyor: **σ ≈ 0.02'ye kadar hiçbir şey
+olmuyor, üstünde performans monoton bozuluyor, ters-U hiçbir yerde yok.**
+İki setin tek örtüşme noktası σ = 0.02 ve orada ikisi de "baseline'dan ayırt
+edilemiyor" diyor — 21 farklı kişide birbirini doğrulayan tek karşılaştırma.
+
+Diğer bulgular pilot 1'i tekrarlıyor: action timing predictive (−43.5 ms) ama
+koşula duyarsız; kontrol değişkenliği ölçütlerinin hiçbiri anlamlı değil;
+kişiye özel optimum bu deneme sayısıyla ölçülemiyor (koşul sıralaması
+split-half rho ≈ 0); öğrenme var (−1.98°/50 deneme) ve koşuldan bağımsız.
+
+**Veri tarafında iyi haber:** pilot 1'in bir numaralı sorunu (seed 12345'e
+sabit, herkes aynı koşul sırası + aynı noise deseni + aynı başlangıç açısı
+dizisi) pilot 2'de yok. Veriden doğrulandı: 9 katılımcıda 9 farklı koşul
+sırası, 9 farklı `noise_seed` dizisi, hiçbir trial'da ortak başlangıç açısı.
+Düzelmeyenler: `config.participantId` hâlâ hep "P001", istenen 24 metadata
+alanının hiçbiri hâlâ gelmiyor.
+
+Ayrıntı: [Pilot2_Sonuc_Ozeti.md](Pilot2_Sonuc_Ozeti.md).
+
+---
+
+## 2026-09-02 — İzole keşif: kontrol değişkenliği ve varyans ayrışımı
+
+İki izole notebook yazıldı ve çalıştırıldı: `91_control_variability.ipynb` ve
+`92_varyans_ayrisimi.ipynb`. İkisi de sadece `data/interim` okuyor, `src/`
+modülü yok, zincirin hiçbir parçası import etmiyor. Hiçbir sonucu karar
+setine girmiyor.
+
+**NB91 — kontrol değişkenliği.** Soru: gürültü kişinin kontrol davranışını
+değiştiriyor mu. Frequency analysis (Welch, medyan frekans) ve sample entropy,
+hem açı hem girdi sinyalinde; ayrıca duty cycle, genlik ve aksiyonlar arası
+süre. Dokuz ölçüt, koşul başına katılımcı × koşul birimi.
+
+**Koşul etkisi yok.** Ham halde iki ölçüt p < 0.05 veriyor (`medfreq_angle` ve
+`sampen_angle`, ikisi de 0.021) ama ikisi de sağlamlık taramasını geçemiyor:
+entropy alt örneklemeye dayanmıyor (60/30 Hz'de anlamlı, 15/10 Hz'de değil),
+medyan frekans pencere boyuna dayanmıyor (`nperseg=128`'de bütün trial'lar aynı
+değeri veriyor, `512`'de etki kayboluyor). Dokuz ölçüt sınandığı için Holm
+sonrası zaten hiçbiri ayakta kalmıyor. Kuadratik hiçbir ölçütte anlamlı değil.
+
+**Asıl çıktı yöntemsel.** Frekans analizi bu veriye bu haliyle uygulanamıyor:
+çubuğun baskın salınım periyodu ~4 s, episode'ların medyanı 4.3 s. Tipik bir
+segmentte salınımın ancak bir dönüşü var, bu da spektrum kestirimini çözünürlük
+sınırına itiyor. Episode'ların yarısı zaten 256 örneklik alt sınırın altında.
+Aynı soruya spektrum gerektirmeden cevap veren yöntem önerildi: Collins & De
+Luca 1993 diffusion analizi.
+
+**NB92 — varyans ayrışımı.** Katılımcı × koşul tablosunda toplam varyans
+kişi / koşul / artık diye ayrıldı, ICC ve split-half güvenilirlik hesaplandı.
+
+| Ölçüt | kişi | koşul | artık | ICC |
+|---|---|---|---|---|
+| Ortalama \|θ\| | %89.4 | %4.0 | %6.6 | 0.91 |
+| Stabilizasyon süresi | %90.7 | %2.1 | %7.2 | 0.91 |
+| Açı kaynaklı düşüş | %96.8 | %0.7 | %2.5 | 0.97 |
+| Action timing | %86.3 | %0.5 | %13.2 | 0.83 |
+
+NB04'teki "koşullar arası yayılım 15 ms, kişiler arası 269 ms" gözlemi bütün
+ölçütler için sayıya döküldü. Within-subject tasarımın neden zorunlu olduğu
+da buradan görünüyor.
+
+**Kişiye özel optimum ölçülemiyor.** Her kişinin bir koşuldaki 10 denemesi
+rastgele 5+5 bölünüp 200 kez tekrarlandı. Kişinin genel seviyesi iki yarıda
+tutuyor (r = 0.97–0.99) ama koşul sıralaması tutmuyor (rho = 0.15 / 0.04 /
+−0.02; aynı "en iyi" oranı %29 / %19 / %35, şansa %20). Spearman-Brown ile
+kullanılabilir güvenilirlik (rho ≥ 0.7) için koşul başına ~80 deneme gerekiyor;
+şu an 10 var. Pilotun kişisel en iyileri (6 no_noise, 5 N1, 1 N2) rastgeleliğin
+üreteceğiyle tutarlı.
+
+**Öğrenme kontrol edildi.** Oturum boyunca iyileşme var ve gürültü etkisinden
+büyük: ortalama −0.047 derece/deneme, 50 denemede −2.29 derece, 11/12 kişide
+(Wilcoxon p = 0.016); gürültünün etkisi ise +1.41 derece. Koşullar deneme
+sırasına dengeli dağıtıldığı için karışmıyor (koşul ortalamaları 24.6–26.5).
+Trend çıkarılınca koşul sıralaması güvenilirliği 0.15 → 0.22 yükseliyor,
+gerçek bir iyileşme ama yetmiyor; varyans ayrışımı neredeyse hiç oynamıyor.
+Yan sonuç: öğrenme 50 denemede ölçülebiliyor, yani ana deneyin ölçmek istediği
+şey bu görevde var. Sınır: kimse platoya ulaşmadı, pilot anlık performansı
+değil öğrenmenin ortasındaki performansı ölçtü. P007 üçüncü kez aykırı
+(tek kötüleşen kişi, +0.078, p = 0.0005).
+
+### Dokümantasyon düzeltmeleri
+
+NB92 §1 bir sağlama üretti ve üç doküman düzeltildi:
+
+1. **[Yontem/06](Yontem/06_Karar_Istatistigi.md) §2 — test seçimi gerekçesi.**
+   "n = 12'de normallik varsayımı sınanamaz; parametrik testler riskli"
+   yazıyordu. Sınanabiliyor: `mae_angle_deg` Shapiro p = 0.99, `stab_time_s`
+   p = 0.15, ve RM-ANOVA Friedman'la aynı sonucu veriyor. Ama
+   `falls_angle_per_trial` p = 0.0009 ile normalliği reddediyor (sayım
+   değişkeni). Tercih savunulabilir, gerekçe düzeltildi.
+2. **[Yontem/06](Yontem/06_Karar_Istatistigi.md) §5 — çoklu karşılaştırma.**
+   Metrikler arası düzeltme yapılmama gerekçesi `mae_angle_deg`–`rms_angle_deg`
+   r = 0.98'e dayandırılmıştı; `rms_angle_deg` karar metriği değil, dolayısıyla
+   geçersiz bir dayanak. Doğru sayılar konuldu (kişi içi: mae–stab −0.86,
+   mae–düşüş 0.42) ve düzeltme fiilen hesaplandı: Holm sonrası lineer
+   0.0015 / 0.0049 / 0.0020, üçü de anlamlı kalıyor. Sonuç değişmiyor.
+3. **Duyarlılık cümlesi.** "Hiçbir p oynamıyor" fazla güçlüydü: `stab_time_s`
+   kuadratiği 0.57 → 0.62 oynuyor. İkisi de anlamlılıktan uzak.
+
+Ayrıca düzeltilenler: stabilizasyon eşiği taraması 10°–45° değil **5°–45°**
+(üç dosyada yanlıştı); koşul sıralaması cümlesinde N2 ile N4 yer değiştirmişti;
+başlangıç |θ| yayılımı 0.32° değil **0.35°**; CLAUDE.md'deki veri katmanları
+zinciri 31 Ağustos'taki `events` → `input_events` yeniden adlandırmasına göre
+güncellenmedi kalmıştı ve `state_events` katmanı eksikti; düşüş sayısı
+tablosuna kapsam etiketi eklendi (1.241 + 140 practice dahil, 1.025 + 131
+sadece measurement).
+
 ## 2026-08-31 — NB06: karar verildi, SR desteklenmiyor
+
+> **Düzeltme, 2026-09-02.** Bu girişteki iki ayrıntı sonradan düzeltildi:
+> eşik taraması 10°–45° değil 5°–45°, ve "hiçbir p oynamıyor" tam doğru değil
+> (`stab_time_s` kuadratiği 0.57 → 0.62). Karar etkilenmiyor. Ayrıntı üstteki
+> 2026-09-02 girişinde.
 
 `src/decide.py` + `06_noise_decision.ipynb`. Çıktı
 `data/processed/karar/decision_stats.csv` ve `decision_table.csv`.

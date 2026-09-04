@@ -2,7 +2,7 @@
 
 **Notebook:** `06_noise_decision.ipynb`
 **Kod:** `src/decide.py`
-**Çıktı:** `data/processed/karar/decision_stats.csv`, `decision_table.csv`
+**Çıktı:** `data/<dataset>/processed/karar/decision_stats.csv`, `decision_table.csv`
 **Durum:** uygulandı (2026-08-31)
 
 Bu kayıt "hangi testi neden kullandık" sorusunun cevabı. Sonuçların kendisi
@@ -34,8 +34,28 @@ bağımlılığı katılımcı içine kapatıyor.
 
 ## 2. Test seçimi
 
-**n = 12.** Bu boyutta normallik varsayımı sınanamaz; parametrik testler
-riskli. Bütün testler sıralama tabanlı.
+**n = 12.** Bütün testler sıralama tabanlı.
+
+**Uygulama notu (2026-09-02).** Bu bölümün ilk hali "n = 12'de normallik
+varsayımı sınanamaz; parametrik testler riskli" diyordu. Sınandı, ve gerekçe
+düzeltilmesi gerekiyor. `92_varyans_ayrisimi.ipynb` §1, aynı katılımcı × koşul
+tablosunda:
+
+| Metrik | Shapiro p | RM-ANOVA | Friedman |
+|---|---|---|---|
+| `mae_angle_deg` | 0.99 | F(4,44) = 6.71, p = 0.0003 | p = 0.0014 |
+| `stab_time_s` | 0.15 | F(4,44) = 3.18, p = 0.022 | p = 0.021 |
+| `falls_angle_per_trial` | **0.0009** | F(4,44) = 3.16, p = 0.023 | p = 0.0051 |
+
+İlk ikisinde normallik reddedilmiyor ve parametrik test aynı sonucu veriyor.
+Üçüncüsünde normallik açıkça reddediliyor — sayım değişkeni olduğu için
+beklenen bir şey — ve orada Friedman parametrik testten daha güçlü çıkıyor.
+
+Yani sıralama tabanlı tercih **savunulabilir**, ama gerekçesi "sınanamaz"
+değil: (a) karar metriklerinden biri gerçekten normal değil, (b) n = 12'de
+Shapiro'nun gücü düşük olduğu için diğer ikisinde "reddedilmedi" ile "normal"
+aynı şey değil, (c) üç metrik için tek bir test ailesinde kalmak tutarlı.
+Hiçbir metrikte sonuç test ailesine bağlı olmadığı için karar etkilenmiyor.
 
 | Soru | Test | Neden |
 |---|---|---|
@@ -89,11 +109,28 @@ N4 değil.
 Holm **bir metriğin dört baseline karşılaştırması içinde** uygulandı.
 
 Metrikler arası ek düzeltme **yapılmadı**, çünkü üç karar metriği bağımsız
-aile değil: NB03'te ölçüldü, `mae_angle_deg` ile `rms_angle_deg` arasında
-r = 0.98, üçü de aynı konstruktu ölçüyor. Bağımsız sayıp düzeltmek de
-düzeltmemek de savunulabilir; düzeltseydik tablo daha muhafazakâr olurdu ve
-`stab_time_s` üzerindeki N2 etkisi kesin düşerdi. Kararı değiştirmezdi:
-karar lineer/kuadratik kontrasta dayanıyor, tek tek karşılaştırmalara değil.
+aile değil.
+
+**Düzeltme (2026-09-02).** Bu gerekçe önce `mae_angle_deg` ile
+`rms_angle_deg` arasındaki r = 0.98'e dayandırılmıştı. O geçersiz bir
+dayanak: `rms_angle_deg` karar metriği değil, dolayısıyla o korelasyon üç
+karar metriğinin ilişkisi hakkında bir şey söylemiyor. Doğru sayılar, kişi
+içi merkezlenmiş katılımcı × koşul tablosunda:
+
+| | mae | stab | falls |
+|---|---|---|---|
+| `mae_angle_deg` | 1.00 | −0.86 | 0.42 |
+| `stab_time_s` | −0.86 | 1.00 | −0.39 |
+| `falls_angle_per_trial` | 0.42 | −0.39 | 1.00 |
+
+mae ile stab birbirinin neredeyse kopyası; `falls_angle_per_trial` ise
+kısmen ayrı bir bilgi taşıyor (r ≈ 0.4). Yani "üçü de aynı konstrukt"
+ifadesi ilk ikisi için doğru, üçüncüsü için fazla güçlü.
+
+Ama sonucu değiştirmiyor, çünkü düzeltme fiilen hesaplandı. Lineer
+kontrastın üç metriğe Holm uygulanmış hali 0.0015 / 0.0049 / 0.0020 — üçü de
+anlamlı kalıyor. Kuadratik zaten üçünde de 1.00'a düzeltiliyor. Karar
+lineer/kuadratik kontrasta dayandığı için etkilenmiyor.
 
 ## 6. Duyarlılık kontrolleri
 
@@ -101,12 +138,15 @@ Karar iki seçime duyarlı olabilirdi; ikisi de test edildi.
 
 **`valid_trial` (`decide.drop_invalid_trials`).** Unity 600 trial'ın 2'sini
 `paused` işaretlemiş; NB01 o kolona bakmıyor (bilinen açık madde), ikisi de
-analize giriyor. Çıkarıldığında hiçbir p değeri oynamıyor, koşul sıralaması
-aynı. Kural yine de NB01'e eklenmeli, ama karar buna bağlı değil.
+analize giriyor. Çıkarıldığında koşul sıralaması aynı kalıyor ve tek bir p
+değeri oynuyor: `stab_time_s` kuadratik 0.5693 → 0.6221. İkisi de anlamlılık
+eşiğinden uzak, yani sonuç etkilenmiyor. (İlk hali "hiçbir p oynamıyor"
+diyordu; §6'daki liste zaten 0.62 gösteriyordu, cümle fazla güçlüydü.)
+Kural yine de NB01'e eklenmeli, ama karar buna bağlı değil.
 
 **Stabilizasyon eşiği (`decide.threshold_sensitivity`).** `stab_time_s`
 bizim eşiğimizle hesaplanıyor (|θ| ≤ 30°, gerekçe `Yontem/04`). Eşik bizim
-seçimimiz olduğu için sonuç ona duyarlı olmamalı. 10°–45° taraması: her
+seçimimiz olduğu için sonuç ona duyarlı olmamalı. 5°–45° taraması: her
 eşikte lineer anlamlı (p ≤ 0.0068), hiçbirinde kuadratik anlamlı değil
 (p = 0.38–0.57).
 
@@ -120,7 +160,9 @@ sıralaması" bölümünde.
 
 - **Güç analizi yok.** "Bu tasarımla ne kadar küçük bir etki saptanabilirdi"
   sorusu NB05'in işi. N1'in null çıkması "fark yok" değil, "bu örneklemle
-  saptanamadı" demek.
+  saptanamadı" demek. Kısmen kapandı: `92_varyans_ayrisimi.ipynb` varyans
+  ayrışımını ve kişi içi güvenilirliği ölçtü, oradan gereken deneme sayısı
+  için bir mertebe tahmini çıkıyor. Klasik güç analizi hâlâ yok.
 - **Bayes faktörü hesaplanmadı.** Null bulguyu (N1 = baseline) kanıt olarak
   sunmak istersek gereken şey bu; şimdilik sadece "ayırt edilemedi" deniyor.
 - **Action timing dahil değil** (NB04). Koşullar arasında ayırt edici
