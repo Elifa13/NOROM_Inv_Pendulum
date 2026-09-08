@@ -15,3 +15,6 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Bir kerelik calisma ciktilari, repoya girmez
+Claude outputs/
