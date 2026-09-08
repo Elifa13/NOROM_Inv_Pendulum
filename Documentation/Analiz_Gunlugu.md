@@ -4,7 +4,7 @@ Ne zaman ne yapıldı, ne karara bağlandı. Yeni giriş **üste** eklenir.
 
 Kayıt tutma amacı: aylar sonra "bu sayı neden böyle" diye sorulduğunda
 cevabın ve o günkü gerekçenin bulunabilmesi. Yöntem ayrıntıları
-[Yontem/](Yontem/) altında, bu dosya sadece kronoloji ve kararlar.
+[Yontem/](Duzenek/) altında, bu dosya sadece kronoloji ve kararlar.
 
 ---
 
@@ -74,7 +74,7 @@ sırası, 9 farklı `noise_seed` dizisi, hiçbir trial'da ortak başlangıç aç
 Düzelmeyenler: `config.participantId` hâlâ hep "P001", istenen 24 metadata
 alanının hiçbiri hâlâ gelmiyor.
 
-Ayrıntı: [Pilot2_Sonuc_Ozeti.md](Pilot2_Sonuc_Ozeti.md).
+Ayrıntı: [Pilot2_Sonuc_Ozeti.md](Pilot_Noise/Pilot2_Sonuc_Ozeti.md).
 
 ---
 
@@ -141,13 +141,13 @@ değil öğrenmenin ortasındaki performansı ölçtü. P007 üçüncü kez ayk�
 
 NB92 §1 bir sağlama üretti ve üç doküman düzeltildi:
 
-1. **[Yontem/06](Yontem/06_Karar_Istatistigi.md) §2 — test seçimi gerekçesi.**
+1. **[Yontem/06](Pilot_Noise/Karar_Istatistigi.md) §2 — test seçimi gerekçesi.**
    "n = 12'de normallik varsayımı sınanamaz; parametrik testler riskli"
    yazıyordu. Sınanabiliyor: `mae_angle_deg` Shapiro p = 0.99, `stab_time_s`
    p = 0.15, ve RM-ANOVA Friedman'la aynı sonucu veriyor. Ama
    `falls_angle_per_trial` p = 0.0009 ile normalliği reddediyor (sayım
    değişkeni). Tercih savunulabilir, gerekçe düzeltildi.
-2. **[Yontem/06](Yontem/06_Karar_Istatistigi.md) §5 — çoklu karşılaştırma.**
+2. **[Yontem/06](Pilot_Noise/Karar_Istatistigi.md) §5 — çoklu karşılaştırma.**
    Metrikler arası düzeltme yapılmama gerekçesi `mae_angle_deg`–`rms_angle_deg`
    r = 0.98'e dayandırılmıştı; `rms_angle_deg` karar metriği değil, dolayısıyla
    geçersiz bir dayanak. Doğru sayılar konuldu (kişi içi: mae–stab −0.86,
@@ -173,8 +173,8 @@ sadece measurement).
 
 `src/decide.py` + `06_noise_decision.ipynb`. Çıktı
 `data/processed/karar/decision_stats.csv` ve `decision_table.csv`.
-Yöntem kaydı: [Yontem/06](Yontem/06_Karar_Istatistigi.md), sonuçlar
-[Pilot_Sonuc_Ozeti.md](Pilot_Sonuc_Ozeti.md).
+Yöntem kaydı: [Yontem/06](Pilot_Noise/Karar_Istatistigi.md), sonuçlar
+[Pilot_Sonuc_Ozeti.md](Pilot_Noise/Pilot1_Sonuc_Ozeti.md).
 
 **Sonuç: stochastic resonance desteklenmiyor.** Kuadratik kontrast — U
 şeklinin doğrudan testi — üç karar metriğinde de null (p = 0.57–0.62).
@@ -211,7 +211,7 @@ sayıyordu, karar seti sadece açı kaynaklı olanları.
 
 `src/timing.py` + `04_control.ipynb` + `config.yaml` → `timing` bloğu.
 Çıktılar `state_events.parquet` (91.165 olay) ve `timing_cells.parquet`.
-Bütün sayılar ve tablolar [Yontem/05](Yontem/05_Action_Timing.md) §5'te.
+Bütün sayılar ve tablolar [Yontem/05](Duzenek/05_Action_Timing.md) §5'te.
 
 **Dört bulgu, önem sırasına göre:**
 
@@ -468,7 +468,7 @@ Beş karar açılmıştı; dördü yukarıdaki tartışmayla kapandı, biri aç�
 
 **Bulgu: U şekli yok, monoton bozulma.** Lineer kontrast maPA'da p = 0.0005,
 kuadratik p = 0.62. N2/N3/N4 baseline'dan anlamlı kötü (Holm sonrası), N1'de
-fark yok. Ayrıntı: [Pilot_Sonuc_Ozeti.md](Pilot_Sonuc_Ozeti.md).
+fark yok. Ayrıntı: [Pilot_Sonuc_Ozeti.md](Pilot_Noise/Pilot1_Sonuc_Ozeti.md).
 
 ---
 

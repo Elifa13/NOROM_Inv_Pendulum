@@ -6,7 +6,7 @@
 **Durum:** uygulandı (2026-08-31)
 
 Bu kayıt "hangi testi neden kullandık" sorusunun cevabı. Sonuçların kendisi
-[../Pilot_Sonuc_Ozeti.md](../Pilot_Sonuc_Ozeti.md)'de.
+[../Pilot_Sonuc_Ozeti.md](Pilot1_Sonuc_Ozeti.md)'de.
 
 ---
 
@@ -153,7 +153,7 @@ eşikte lineer anlamlı (p ≤ 0.0068), hiçbirinde kuadratik anlamlı değil
 ## 7. Neyi beslediği
 
 Ana deneyin noise seviyesi seçimi. Aday sıralaması ve ekibe sorulacak soru
-[../Pilot_Sonuc_Ozeti.md](../Pilot_Sonuc_Ozeti.md) → "Ana deney için aday
+[../Pilot_Sonuc_Ozeti.md](Pilot1_Sonuc_Ozeti.md) → "Ana deney için aday
 sıralaması" bölümünde.
 
 ## 8. Bu kayıtta olmayanlar

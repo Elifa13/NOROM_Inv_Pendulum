@@ -60,7 +60,7 @@ Kendi eşiğimiz `performance.stab_angle_deg` = **30°**. Bununla ortalama
 
 Eşiğin kendisi bir seçim; sunum notebook'unda 5°–45° arası taranmış ve
 sonucun yönü bütün eşiklerde aynı çıkmış (bkz.
-[../Pilot_Sonuc_Ozeti.md](../Pilot_Sonuc_Ozeti.md#eşik-seçimi-sonucu-değiştirmiyor)).
+[../Pilot_Sonuc_Ozeti.md](../Pilot_Noise/Pilot1_Sonuc_Ozeti.md#eşik-seçimi-sonucu-değiştirmiyor)).
 
 ### Düşüş sayımı üç kaynakta tutuyor
 

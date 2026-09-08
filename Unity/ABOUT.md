@@ -5,7 +5,7 @@ deney ekibinde, bu repoda yok.
 
 Analiz tarafı Unity'ye sadece üretilen veri üzerinden bağlı. Kayıt formatına
 dair istekler ekibe ayrı bir belgeyle iletiliyor:
-[../Documentation/Veri_Kayit_Istekleri.md](../Documentation/Veri_Kayit_Istekleri.md).
+[../Documentation/Veri_Kayit_Istekleri.md](../Documentation/Pilot_Noise/Kayit_Istekleri.md).
 
 ## Veriden bilinen build bilgisi
 
@@ -17,7 +17,7 @@ dair istekler ekibe ayrı bir belgeyle iletiliyor:
 | Trial | 20 s aktif + 1 s reset, 3 practice + 50 measurement |
 
 Fizik modeli metadata'da yazmıyor; veriden türetildi ve doğrulandı (bkz.
-[../Documentation/Yontem/02_Fizik_ve_T0.md](../Documentation/Yontem/02_Fizik_ve_T0.md)).
+[../Documentation/Yontem/02_Fizik_ve_T0.md](../Documentation/Duzenek/02_Fizik_ve_T0.md)).
 Standart cart-pole, düzgün çubuk, RK4, Δt = 1/60. Dinamik denklemine
 **yarım** pole uzunluğu (0.5 m) giriyor.
 

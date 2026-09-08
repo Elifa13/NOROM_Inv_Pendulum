@@ -238,5 +238,5 @@ Treviño'da seviyeler logaritmik ölçekte aralıklı.
 
 Pilot sonucu bu endişeyi destekliyor: orta seviyede iyileşme yok, noise
 arttıkça performans monoton olarak bozuluyor (bkz.
-[Pilot_Sonuc_Ozeti.md](Pilot_Sonuc_Ozeti.md)). Yani gözlenen şey klasik
+[Pilot_Sonuc_Ozeti.md](Pilot1_Sonuc_Ozeti.md)). Yani gözlenen şey klasik
 bir maskeleme etkisi gibi duruyor, stochastic resonance gibi değil.
