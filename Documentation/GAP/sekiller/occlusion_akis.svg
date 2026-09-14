@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1362" viewBox="0 0 1000 1362" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1000" height="1362" fill="#ffffff"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8C6A46"/></marker></defs>
+<text x="60" y="46" font-size="21" font-weight="600" fill="#1c1c1c">1. Occlusion analizi: veri akisi</text>
+<text x="60" y="70" font-size="13.5" fill="#666">Kisi basina iki blok, her blok 40 deneme. Cikti: kisinin varsaydigi yercekimi.</text>
+<rect x="42" y="355" width="506" height="415" rx="6" fill="none" stroke="#8C6A46" stroke-width="1.2" stroke-dasharray="7 5"/>
+<text x="542" y="373" font-size="13" font-weight="600" text-anchor="end" fill="#8C6A46">her (g, sigma) denemesi icin tekrar calisir</text>
+<path d="M 548 736 C 582 736, 582 790, 325.0 790" fill="none" stroke="#8C6A46" stroke-width="1.4" marker-end="url(#ag)"/>
+<text x="560" y="786.0" font-size="12.5" fill="#8C6A46">~500 cagri</text>
+<rect x="60" y="100" width="470" height="100" rx="4" fill="#ffffff" stroke="#8a8a8a" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="76" y="127" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">occlusion_responses.csv</text>
+<text x="76" y="150" font-size="13.5" fill="#444">onset_pole_angle_deg</text>
+<text x="76" y="169" font-size="13.5" fill="#444">onset_pole_angular_velocity_deg_s</text>
+<text x="76" y="188" font-size="13.5" fill="#444">response_angle_deg</text>
+<text x="570" y="124" font-size="13" fill="#666">Bir blok = 40 satir.</text>
+<text x="570" y="142" font-size="13" fill="#666">Kisi basina 2 blok:</text>
+<text x="570" y="160" font-size="13" fill="#666">prediction_pre, prediction_post.</text>
+<line x1="150" y1="200" x2="150" y2="244" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="162" y="227.0" font-size="13" font-family="Consolas, Menlo, monospace" fill="#555">onsets (40x2),  resp_idx (40)</text>
+<rect x="60" y="244" width="470" height="81" rx="4" fill="#F5EDE2" stroke="#8C6A46" stroke-width="1.4"/>
+<text x="76" y="271" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">response_bins(options)</text>
+<text x="76" y="294" font-size="13.5" fill="#444">girdi: 13 secenek acisi, [-65, +65]</text>
+<text x="76" y="313" font-size="13.5" fill="#444">cikti: lo, hi  (kutu sinirlari, 13x2)</text>
+<text x="570" y="268" font-size="13" fill="#666">b_k = (a_k + a_k+1) / 2</text>
+<text x="570" y="286" font-size="13" fill="#666">uclarda -inf ve +inf</text>
+<line x1="150" y1="325" x2="150" y2="369" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="162" y="352.0" font-size="13" font-family="Consolas, Menlo, monospace" fill="#555">lo, hi</text>
+<rect x="60" y="385" width="470" height="100" rx="4" fill="#F5EDE2" stroke="#8C6A46" stroke-width="1.4"/>
+<text x="76" y="412" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">forward(theta, omega, g)</text>
+<text x="76" y="435" font-size="13.5" fill="#444">54 kez rk4_step, F = 0, dt = 1/60</text>
+<text x="76" y="454" font-size="13.5" fill="#444">girdi: tek uyaranin onset durumu + g</text>
+<text x="76" y="473" font-size="13.5" fill="#444">cikti: theta_hat (900 ms sonraki aci)</text>
+<text x="570" y="409" font-size="13" fill="#666">src/physics.py kullanir:</text>
+<text x="570" y="427" font-size="13" fill="#666">   cartpole_deriv, rk4_step</text>
+<text x="570" y="445" font-size="13" fill="#666"></text>
+<text x="570" y="463" font-size="13" fill="#666">F = 0 iken dinamik (theta, omega)</text>
+<text x="570" y="481" font-size="13" fill="#666">uzerinde kapali. Cart konumu ve</text>
+<text x="570" y="499" font-size="13" fill="#666">hizi hesaba girmez.</text>
+<line x1="150" y1="485" x2="150" y2="529" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="60" y="529" width="470" height="81" rx="4" fill="#F5EDE2" stroke="#8C6A46" stroke-width="1.4"/>
+<text x="76" y="556" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">predict(onsets, g)</text>
+<text x="76" y="579" font-size="13.5" fill="#444">40 uyaran icin forward cagirir</text>
+<text x="76" y="598" font-size="13.5" fill="#444">cikti: theta_hat_i  (40 elemanli vektor)</text>
+<line x1="150" y1="610" x2="150" y2="654" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="60" y="654" width="470" height="100" rx="4" fill="#F5EDE2" stroke="#8C6A46" stroke-width="1.4"/>
+<text x="76" y="681" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">neg_loglik(g, sigma)</text>
+<text x="76" y="704" font-size="13.5" fill="#444">P(r_i) = Phi((hi - theta_hat)/sigma)</text>
+<text x="76" y="723" font-size="13.5" fill="#444">            - Phi((lo - theta_hat)/sigma)</text>
+<text x="76" y="742" font-size="13.5" fill="#444">cikti: -log L   (tek sayi)</text>
+<text x="570" y="678" font-size="13" fill="#666">Yanit modeli:</text>
+<text x="570" y="696" font-size="13" fill="#666">   y_i = theta_hat_i(g) + eps</text>
+<text x="570" y="714" font-size="13" fill="#666">   eps ~ N(0, sigma^2)</text>
+<text x="570" y="732" font-size="13" fill="#666">sonra en yakin secenege yuvarlanir.</text>
+<line x1="150" y1="754" x2="150" y2="798" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="60" y="798" width="470" height="100" rx="4" fill="#F5EDE2" stroke="#8C6A46" stroke-width="1.4"/>
+<text x="76" y="825" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">fit_block(onsets, resp_idx, options)</text>
+<text x="76" y="848" font-size="13.5" fill="#444">1) kaba grid: g = 0.2 .. 6.0, adim 0.05</text>
+<text x="76" y="867" font-size="13.5" fill="#444">2) Nelder-Mead ile lokal arama</text>
+<text x="76" y="886" font-size="13.5" fill="#444">cikti: g_hat, sigma_hat, neg_loglik, n</text>
+<text x="570" y="822" font-size="13" fill="#666">Grid, lokal aramaya baslangic</text>
+<text x="570" y="840" font-size="13" fill="#666">noktasi verir. Sentetik veride</text>
+<text x="570" y="858" font-size="13" fill="#666">yuzey tek modlu cikti, yani sart</text>
+<text x="570" y="876" font-size="13" fill="#666">degil, ucuz sigorta.</text>
+<text x="570" y="894" font-size="13" fill="#666">sigma yerine log sigma parametrize</text>
+<text x="570" y="912" font-size="13" fill="#666">edilir, pozitiflik kisiti kalkar.</text>
+<line x1="150" y1="898" x2="150" y2="942" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="162" y="925.0" font-size="13" font-family="Consolas, Menlo, monospace" fill="#555">kisi basina 2 satir</text>
+<rect x="60" y="942" width="470" height="81" rx="4" fill="#EDF3EC" stroke="#4F7A52" stroke-width="1.4"/>
+<text x="76" y="969" font-family="Consolas, Menlo, monospace" font-size="16" font-weight="600" fill="#1c1c1c">occlusion_fits  (tablo)</text>
+<text x="76" y="992" font-size="13.5" fill="#444">participant_id, phase_label,</text>
+<text x="76" y="1011" font-size="13.5" fill="#444">g_hat, sigma_hat, neg_loglik, n, converged</text>
+<line x1="150" y1="1023" x2="150" y2="1067" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="60" y="1067" width="470" height="81" rx="4" fill="#EDF3EC" stroke="#4F7A52" stroke-width="1.4"/>
+<text x="76" y="1094"  font-size="16" font-weight="600" fill="#1c1c1c">kisi ici fark</text>
+<text x="76" y="1117" font-size="13.5" fill="#444">delta_g = g_hat(post) - g_hat(pre)</text>
+<text x="76" y="1136" font-size="13.5" fill="#444">delta_sigma = sigma_hat(post) - sigma_hat(pre)</text>
+<text x="570" y="1091" font-size="13" fill="#666">Kisi ici fark, kisiler arasi genel</text>
+<text x="570" y="1109" font-size="13" fill="#666">farkliliklari siliyor.</text>
+<line x1="150" y1="1148" x2="150" y2="1192" stroke="#555" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="60" y="1192" width="470" height="100" rx="4" fill="#EDF3EC" stroke="#4F7A52" stroke-width="1.4"/>
+<text x="76" y="1219"  font-size="16" font-weight="600" fill="#1c1c1c">grup karsilastirmasi</text>
+<text x="76" y="1242" font-size="13.5" fill="#444">gradual grubun delta_g'si  vs</text>
+<text x="76" y="1261" font-size="13.5" fill="#444">kontrol grubunun delta_g'si</text>
+<text x="76" y="1280" font-size="13.5" fill="#444">non-parametrik, n kucuk</text>
+<text x="570" y="1216" font-size="13" fill="#666">Beklenti: gradual grupta pozitif</text>
+<text x="570" y="1234" font-size="13" fill="#666">kayma, kontrol grubunda sifir.</text>
+<rect x="570" y="1017" width="330" height="96" rx="4" fill="#fafafa" stroke="#e0e0e0"/>
+<text x="584" y="1041" font-size="13" font-weight="600" fill="#444">Kutu renkleri</text>
+<rect x="584" y="1052" width="22" height="14" rx="2" fill="#ffffff" stroke="#8a8a8a" stroke-dasharray="6 4"/>
+<text x="616" y="1063" font-size="13" fill="#555">veri dosyasi</text>
+<rect x="584" y="1074" width="22" height="14" rx="2" fill="#F5EDE2" stroke="#8C6A46"/>
+<text x="616" y="1085" font-size="13" fill="#555">yeni yazilacak kod</text>
+<rect x="584" y="1096" width="22" height="14" rx="2" fill="#EDF3EC" stroke="#4F7A52"/>
+<text x="616" y="1107" font-size="13" fill="#555">turetilen tablo</text>
+</svg>
