@@ -1,34 +1,41 @@
 # Notebooks / pilot2
 
-Bir üst klasördeki zincirin **pilot2** verisi için kopyası. 9 katılımcı
-(P001–P009), 2–3 Eylül 2026, noise σ 0 / .005 / .010 / .015 / .020.
+A copy of the pilot1 chain (`../pilot1/`) for the **pilot2** data. 10
+participants (P001–P010), 2–3 September 2026 and P010 on 8 September 2026,
+noise σ 0 / .005 / .010 / .015 / .020.
 
-Tek yapısal fark ilk hücredeki `DATASET = "pilot2"`. Mantık gene `../../src/`
-altında, hiçbir modül çoğaltılmadı — analiz kodu sigmayı veriden okuyor,
-koşul etiketleri iki sette de aynı beş isim.
+The only structural difference is `DATASET = "pilot2"` in the first cell. The
+logic is still under `../../../src/`; no module was duplicated. The analysis
+code reads sigma from the data, and the condition labels are the same five
+names in both sets.
 
-| # | Notebook | Durum |
+| # | Notebook | Status |
 |---|---|---|
-| 01 | `01_load_qc.ipynb` | çalıştı — 9 oturum, 477 trial, QC FAIL 0 |
-| 02 | `02_build.ipynb` | çalıştı — 1.332 episode, 15.133 regime run, T₀ doğrulandı |
-| 03 | `03_performance.ipynb` | çalıştı — 450 measurement trial, 45 hücre |
-| 04 | `04_control.ipynb` | çalıştı — zero crossing −43.5 ms, koşul etkisi yok |
-| 06 | `06_noise_decision.ipynb` | çalıştı — bütün testler null |
-| 91 | `91_control_variability.ipynb` | çalıştı — koşul etkisi yok |
-| 92 | `92_varyans_ayrisimi.ipynb` | çalıştı — koşulun payı %0.2 |
-| 93 | `93_ogrenme_ve_varyans.ipynb` | çalıştı — öğrenme var, koşuldan bağımsız |
+| 01 | `01_load_qc.ipynb` | ran: 10 sessions, 530 trials, QC FAIL 0 |
+| 02 | `02_build.ipynb` | ran: 1,490 episodes, 16,443 regime runs, T₀ validated |
+| 03 | `03_performance.ipynb` | ran: 500 measurement trials, 50 cells |
+| 04 | `04_control.ipynb` | ran: zero crossing −45.8 ms, no condition effect |
+| 06 | `06_noise_decision.ipynb` | ran: all tests null |
+| 91 | `91_control_variability.ipynb` | ran: no condition effect |
+| 92 | `92_varyans_ayrisimi.ipynb` | ran: condition share 0.1–0.2% |
+| 93 | `93_ogrenme_ve_varyans.ipynb` | ran: learning present, independent of condition |
 
-90 (sunum) kopyalanmadı.
+90 (presentation) was not copied.
 
-**İki koda özel fark** (pilot1 kopyasında yok):
+**Two code-level differences** (not in the pilot1 copy):
 
-- NB04'te öğrenme kaymasının aykırı kişi kontrolü. Pilot1'de liste elle
-  `["P007", "P012"]` yazılmıştı; burada ortalama zero crossing'i medyandan
-  en çok sapan iki kişi veriden seçiliyor (pilot2'de P002 ve P001).
+- In NB04, the outlier-person check for the learning shift. In pilot1 the
+  list was hard-coded as `["P007", "P012"]`; here the two people whose mean
+  zero crossing deviates most from the median are chosen from the data (P002
+  and P001 in pilot2).
+- In NB91, a measure-reliability section (ICC and split-half). The functions
+  are imported from `src/reliability.py`; record in
+  `Documentation/Setup/06_Reliability.md`. (NB91's markdown still says
+  "12 scores" in one place, left over from pilot1.)
 
-Sonuçların yorumu: `../../../Documentation/Pilot2_Sonuc_Ozeti.md`.
-Yöntem gerekçeleri (iki set için de aynı): `../../../Documentation/Yontem/`.
+Interpretation of results: `Documentation/Pilot_Noise/Pilot2_Results_Summary.md` (from repo root).
+Method rationale (same for both sets): `Documentation/Setup/` (from repo root).
 
-**Uyarı.** Pilot1 ile pilot2 katılımcı id'leri çakışıyor (ikisinde de P001…)
-ama aynı kişiler değil; koşul etiketleri de aynı ama sigmalar farklı. İki
-setin tabloları hiçbir yerde birleştirilmez.
+**Warning.** Pilot1 and pilot2 participant ids collide (P001… in both) but
+they are different people; the condition labels are the same too but the
+sigmas differ. The two sets' tables are never merged anywhere.

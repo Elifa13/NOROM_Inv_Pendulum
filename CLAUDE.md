@@ -1,139 +1,152 @@
 # CLAUDE.md
 
-Bu dosya yönlendiricidir, bilgi deposu değil. Burada yalnızca çalışmalar üstü
-olan şeyler durur: düzenek, veri formatı, repo haritası, çalışma kuralları.
-Bir sayı ya da bulgu tek bir çalışmaya aitse burada değil, o çalışmanın
-klasöründedir. Kural aşağıda, "Nereye ne yazılır" başlığında.
+This file is a router, not a knowledge store. It only holds what spans all
+studies: the setup, the data format, the repo map and the working rules. A
+number or finding that belongs to one study lives in that study's folder, not
+here. The rule is below, under "Where things go".
 
-## Proje
+## Project
 
-Cart-pole (inverted pendulum) dengeleme görevinde motor öğrenme ve içsel model
-çalışılıyor. Düzenek Ludolph 2017'nin aynısı, virtual reality yok, ekran ve
-analog kol var.
+Motor learning and internal models in a cart-pole (inverted pendulum)
+balancing task. The setup is identical to Ludolph 2017: no virtual reality, a
+screen and an analog stick.
 
-**Aktif çalışma: GAP (Gravity Adaptation and Prediction).** Yerçekimi kademeli
-olarak 1.0'dan 3.5 m/s²'ye çıkarken kişinin kontrol politikası nasıl değişiyor,
-ve bu değişim occlusion tabanlı bir algısal testte görünüyor mu. İki grup:
-gradual gravity ve constant gravity (kontrol). Sekiz aşamalı seans. Tasarımın
-tamamı `Documentation/GAP/00_Tasarim.md`.
+**Active study: GAP (Gravity Adaptation and Prediction).** How a person's
+control policy changes while gravity is stepped from 1.0 to 3.5 m/s², and
+whether that change shows up in an occlusion-based perceptual test. Two
+groups: gradual gravity and constant gravity (control). Eight-phase session.
+Full design in `Documentation/GAP/00_Design.md`.
 
-**Kapanmış çalışma: görsel noise / stochastic resonance.** İki pilot, 21
-katılımcı, dokuz noise seviyesi. Ters-U bulunamadı, hipotez desteklenmedi,
-çalışma kapatıldı. Özet ve devredilen kararlar `Documentation/Pilot_Noise/`.
+**Closed study: visual noise / stochastic resonance.** Two pilots, 22
+participants, nine noise levels. No inverted U, hypothesis not supported,
+study closed. Summary and carried-over decisions in `Documentation/Pilot_Noise/`.
 
-## Rolüm
+## My role
 
-Veriyi ben analiz ediyorum, deneyi ben yapmıyorum, tasarımı değiştiremem.
-Kayıt tarafına sadece "şu alanı da kaydedin" diyebiliyorum. Yani "şunu da
-ölçelim" önerisi ancak mevcut ya da istenen kolonlardan türetilebiliyorsa
-uygulanabilir.
+I analyse the data. I do not run the experiment and cannot change the design.
+On the recording side I can only ask "please also record this field". So a
+"let's also measure X" proposal is only feasible if X can be derived from
+existing or requested columns.
 
-## Repo haritası
+## Repo map
 
-| Yer | Ne var |
+| Location | Contents |
 |---|---|
-| `Documentation/Duzenek/` | Düzeneğe ait yöntem kayıtları. Her çalışmada geçerli: veri işleme ve QC, fizik modeli ve T₀, state/action/episode tanımları, performans metrikleri, action timing |
-| `Documentation/GAP/` | Aktif çalışma: tasarım, kayıt istekleri, modelleme planı |
-| `Documentation/Pilot_Noise/` | Kapanmış çalışma: iki pilot özeti, karar istatistiği, o dönemin kayıt istekleri, `arsiv/` altında eski Office belgeleri |
-| `Documentation/Analiz_Gunlugu.md` | Tarihli günlük, yeni giriş üste. Ne zaman ne karara bağlandı |
-| `Data Analysis/src/` | Analiz mantığı. Notebook'lar ince kalır, mantık burada |
-| `Data Analysis/Notebooks/pilot_noise/` | Kapanmış çalışmanın iki zinciri, dondurulmuş |
-| `Data Analysis/data/` | Ham ve türetilmiş veri. Git'te tutulmaz, kaynak Google Drive |
-| `Literature/` | Makaleler ve kaynak kaydı |
-| `Unity/` | Deneyi çalıştıran proje. Şu an boş, proje deney ekibinde |
+| `Documentation/Setup/` | Method records for the setup, valid in every study: data processing and QC, physics model and T₀, state/action/episode definitions, performance metrics, action timing, reliability |
+| `Documentation/GAP/` | Active study: design, recording requests, modelling plan |
+| `Documentation/Pilot_Noise/` | Closed study: both pilot summaries, decision statistics, recording requests of that period, old Office documents under `archive/` |
+| `Documentation/Analysis_Log.md` | Dated analysis log, newest entry on top. What was decided when |
+| `Data Analysis/ABOUT.md` | Entry point for the analysis side: folder layout, what each `src/` module does, data layers |
+| `Data Analysis/src/` | Analysis logic. Notebooks stay thin, the logic lives here |
+| `Data Analysis/Notebooks/pilot_noise/` | The closed study's two chains, frozen |
+| `Data Analysis/data/` | Raw and derived data. Not in git, source is Google Drive |
+| `Literature/` | Papers, notes on the basis papers and the reading list. Index: `Literature/README.md` |
+| `Unity/` | The project that runs the experiment. Only `ABOUT.md` for now; the project itself is with the experiment team |
 
-## Düzenek
+## Setup
 
-Fizik parametreleri Ludolph 2017 ile aynı. Motor değişmiyor, çalışmadan
-çalışmaya değişen tek şey yerçekimi ve seans yapısı.
+Physics parameters are the same as Ludolph 2017. The physics never changes;
+the only things that differ between studies are gravity and session structure.
 
-| Parametre | Değer |
+| Parameter | Value |
 |---|---|
-| Cart kütlesi | 0.40 kg |
-| Pole kütlesi | 0.08 kg |
-| Pole uzunluğu | 1.00 m (dinamik denklemine yarım uzunluk, 0.5 m girer) |
-| Kuvvet sınırı | ±4 N |
-| Ray sınırı | ±5 m |
-| Açı sınırı (fall) | ±60° |
-| Başlangıç açısı | U(−7.5°, +7.5°) |
-| İntegrasyon | RK4, Δt = 1/60 s |
-| Örnekleme | FixedUpdate, 60 Hz |
-| Yerçekimi | çalışmaya göre değişir |
+| Cart mass | 0.40 kg |
+| Pole mass | 0.08 kg |
+| Pole length | 1.00 m (the dynamics use the half-length, 0.5 m) |
+| Force limit | ±4 N |
+| Track limit | ±5 m |
+| Angle limit (fall) | ±60° |
+| Initial angle | U(−7.5°, +7.5°) |
+| Integration | RK4, Δt = 1/60 s |
+| Sampling | FixedUpdate, 60 Hz |
+| Gravity | depends on the study |
 
-Model veriden doğrulandı, gözlenen açısal ivmeyle korelasyon 0.989–0.997.
-Türetme, doğrulama ve T₀ hesabı `Documentation/Duzenek/02_Fizik_ve_T0.md`.
+The model was validated against the data: correlation with observed angular
+acceleration 0.989–0.997. Derivation, validation and T₀ in
+`Documentation/Setup/02_Physics_and_T0.md`.
 
-## Veri
+## Data
 
-Kaynak Google Drive, klasör bağlantıya sahip herkese açık, kimlik doğrulama
-yok. `src/drive_sync.py` `gdown` ile çeker, var olanı tekrar indirmez, yerelde
-olup uzakta olmayanı silmez. Veri repoya commit edilmez.
+Source is Google Drive; the folder is public to anyone with the link, no
+authentication. `src/drive_sync.py` pulls with `gdown`, does not re-download
+existing files, and does not delete local files missing remotely. Data is
+never committed.
 
-Klasör yapısı `<participant_id>/<session_id>/` ve içinde üç dosya:
-`metadata.json` (oturumda bir kez), `timeseries.csv` (her FixedUpdate'te bir
-satır), `trial_summary.csv` (trial sonunda tek satır). Kolon listeleri her
-çalışmanın kayıt istekleri belgesinde.
+Folder structure is `<participant_id>/<session_id>/` with three files:
+`metadata.json` (once per session), `timeseries.csv` (one row per
+FixedUpdate), `trial_summary.csv` (one row at the end of each trial). Column
+lists are in each study's recording requests document.
 
-Veri katmanları:
+Data layers:
 
 ```
-Raw Sample → Clean Sample (QC'den geçmiş, maskeli)
-  → Girdi olayı (onset / offset / reversal)  |  Durum olayı (açı geçişi)
+Raw Sample → Clean Sample (passed QC, masked)
+  → Input event (onset / offset / reversal)  |  State event (angle crossing)
   → Regime run (Safe / Saved / Failed / TrackLoss)
-  → Episode (reset'ten reset'e)
+  → Episode (reset to reset)
   → Trial
-  → Analiz birimi (çalışmaya göre: katılımcı × koşul, katılımcı × gravity step)
+  → Analysis unit (per study: participant × condition, participant × gravity step)
 ```
 
-Episode ve regime run aynı şey değil. İlki Ludolph'un süre analizine, ikincisi
-Park'ın rejim sınıflandırmasına hizmet ediyor. Ayrıntı
-`Documentation/Duzenek/03_Durum_Aksiyon_Episode.md`.
+Episode and regime run are not the same thing. The first serves Ludolph's
+duration analysis, the second Park's regime classification. Details in
+`Documentation/Setup/03_State_Action_Episode.md`.
 
-### Veri setleri
+### Datasets
 
-Setler hiçbir aşamada birleştirilmez, ayrım klasör düzeyinde. Katılımcı
-id'leri her sette P001… diye gidiyor ama aynı kişiler değil.
+Datasets are never merged at any stage; the separation is at folder level.
+Participant ids run P001… in every set, but they are different people.
 
-| Set | Çalışma | Durum |
+| Set | Study | Status |
 |---|---|---|
-| `pilot1` | noise | 12 katılımcı, Ağustos 2026, kapandı |
-| `pilot2` | noise | 9 katılımcı, Eylül 2026, kapandı |
-| `gap` | GAP | henüz veri yok |
+| `pilot1` | noise | 12 participants, August 2026, closed |
+| `pilot2` | noise | 10 participants, September 2026, closed |
+| `gap` | GAP | no data yet |
 
-Aktif set notebook'un ilk hücresindeki `DATASET` değişkeni. Yolları
-`src/dataset.load_config` çözer, `dataset.dirs` interim'e bir `.dataset`
-damgası bırakır, yanlış set yanlış klasöre yazmaya kalkarsa hata verir.
+The active set is the `DATASET` variable in a notebook's first cell.
+`src/dataset.load_config` resolves the paths; `dataset.dirs` leaves a
+`.dataset` stamp in interim and raises an error if the wrong set tries to
+write to the wrong folder.
 
-### Bilinen kayıt davranışları
+### Known recording behaviours
 
-Analizi etkileyen ve ekibe iletilmiş olanlar: reset satırlarında
-`applied_force_n` sıfıra zorlanıyor ama `input_applied` son değerinde kalıyor
-(sahte zero-crossing üretir), reset'te hızlar sıfırlanmıyor, `valid_trial`
-kolonuna güvenilmez, seed pilot1'de sabitti pilot2'de düzeldi. Ayrıntı
-`Unity/ABOUT.md` ve `Documentation/Pilot_Noise/Kayit_Istekleri.md`.
+Reported to the team, and they affect the analysis: on reset rows
+`applied_force_n` is forced to zero but `input_applied` keeps its last value
+(creates fake zero crossings); velocities are not reset on reset; the
+`valid_trial` column cannot be trusted; the seed was fixed in pilot1 and fixed
+before pilot2. Details in `Unity/ABOUT.md` and
+`Documentation/Pilot_Noise/Recording_Requests.md`.
 
-## Nereye ne yazılır
+## Where things go
 
-Bu reponun daha önce bozulma sebebi buydu, o yüzden kural açık:
+This is why the repo broke before, so the rule is explicit:
 
-- Bir hesap her çalışmada aynı şekilde yapılıyorsa kaydı `Documentation/Duzenek/`
-  altına girer. Her kayıtta tanım, kod referansı, hangi seçenekler vardı ve
-  neden bu seçildi, kanıt, neyi beslediği bulunur.
-- Bir sayı, bulgu ya da karar tek bir çalışmaya aitse o çalışmanın klasörüne
-  girer, buraya değil.
-- Yeni bir analiz kararı verildiğinde `Documentation/Analiz_Gunlugu.md`'ye bir
-  giriş, ilgili yöntem kaydına bir güncelleme gider.
-- Literatürden aynen alınmayan her şey işaretlenir: neden aynen alınamadı,
-  yerine ne kondu.
+- If a computation is done the same way in every study, its record goes under
+  `Documentation/Setup/`. Each record has: definition, code reference, which
+  options existed and why this one was chosen, evidence, and what it feeds.
+- A number, finding or decision that belongs to one study goes in that study's
+  folder, not here.
+- When a new analysis decision is made, add an entry to
+  `Documentation/Analysis_Log.md` and update the relevant method record.
+- Anything not taken as-is from the literature is marked: why it could not be
+  taken as-is, and what replaced it.
+- New papers go into `Literature/README.md`; basis papers get a note from
+  `Literature/_template.md`.
 
-## Çalışma kuralları
+## Working rules
 
-- Kod yazmadan önce sor. Ne yazacağını anlat, onay al, sonra yaz.
-- Amaç dışı şeylerin peşine düşme. Bir veri kalitesi detayı eldeki kararı
-  değiştirmiyorsa uğraşma. Önemli olduğunu düşünüyorsan önce ne kadar önemli
-  olduğunu söyle.
-- Her şeyi eşit acil gösteren düz liste verme, etkiye göre sırala.
-- Eşikler `config.yaml`'da, koda gömülmez.
-- Mantık `src/` altında modül olur, notebook'lar ince kalır.
-- Kısa konuş. Rapor veya slayt formatı değil, düz anlat.
-- Türkçe yaz, teknik terimleri İngilizce bırak.
+- Ask before writing code. Say what you will write, get approval, then write.
+- Check the repo and project files before anything else. Do not search the web
+  without asking Elif first.
+- Never state a fact about a paper, dataset or library that has not been read
+  in the current session.
+- At every completed milestone and at the start of every new project, ask Elif
+  whether any md files need updating, and agree together what to keep.
+- Do not chase things outside the goal. If a data quality detail does not
+  change the decision at hand, leave it. If you think it matters, say how much
+  first.
+- Do not give flat lists where everything looks equally urgent; order by impact.
+- Thresholds live in `config.yaml`, not in code.
+- Logic becomes a module under `src/`; notebooks stay thin.
+- Keep it short. Plain discussion, not report or slide format.
+- **All md files in this repo are written in English.**

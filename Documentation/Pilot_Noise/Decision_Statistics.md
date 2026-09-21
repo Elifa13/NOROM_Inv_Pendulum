@@ -1,121 +1,126 @@
-# 06 — Karar istatistiği
+# Decision statistics (noise study)
 
 **Notebook:** `06_noise_decision.ipynb`
-**Kod:** `src/decide.py`
-**Çıktı:** `data/<dataset>/processed/karar/decision_stats.csv`, `decision_table.csv`
-**Durum:** uygulandı (2026-08-31)
+**Code:** `src/decide.py`
+**Output:** `data/<dataset>/processed/karar/decision_stats.csv`, `decision_table.csv`
+**Status:** implemented (2026-08-31)
 
-Bu kayıt "hangi testi neden kullandık" sorusunun cevabı. Sonuçların kendisi
-[../Pilot_Sonuc_Ozeti.md](Pilot1_Sonuc_Ozeti.md)'de.
+This record answers "which test did we use and why". The results themselves
+are in [Pilot1_Results_Summary.md](Pilot1_Results_Summary.md) and
+[Pilot2_Results_Summary.md](Pilot2_Results_Summary.md). The numbers below are from pilot1 (n = 12).
 
 ---
 
-## 0. Terimler
+## 0. Terms
 
-| Terim | Ne demek |
+| Term | Meaning |
 |---|---|
-| **within-subject** | Her katılımcı bütün koşulları gördü; karşılaştırma kişinin kendi içinde yapılıyor. Kişiler arası devasa fark böyle devre dışı kalıyor. |
-| **Friedman test** | Tekrarlı ölçümde "bu k koşul arasında herhangi bir fark var mı" sorusunun non-parametrik (sıralama tabanlı) omnibus testi. ANOVA'nın dağılım varsayımı gerektirmeyen karşılığı. |
-| **Kendall's W** | Friedman'ın etki büyüklüğü. 0 = katılımcılar koşulları rastgele sıralıyor, 1 = hepsi aynı sırada. `W = χ² / (n(k−1))`. |
-| **Wilcoxon signed-rank** | İki eşleşmiş ölçüm arasındaki farkın testi. Paired t-test'in non-parametrik karşılığı. n = 12'de exact hesaplanıyor. |
-| **Holm düzeltmesi** | Çoklu karşılaştırmada yanlış pozitif riskini kontrol eder. Bonferroni'nin daha az muhafazakâr, adım adım (step-down) sürümü. |
-| **orthogonal contrast** | Koşul ortalamalarına ağırlık verip tek bir skora indirmek. Ağırlıklar ortogonal seçilirse lineer ve kuadratik bileşen birbirinden bağımsız test edilir. |
-| **rank-biserial correlation** | Eşleşmiş Wilcoxon'un etki büyüklüğü: sıfır olmayan farkların \|d\| sıralamasında pozitiflerin payı eksi negatiflerin payı, −1…+1. |
-| **d<sub>z</sub>** | Eşleşmiş fark etki büyüklüğü: ortalama fark ÷ farkların standart sapması. |
+| **within-subject** | Every participant saw all conditions; the comparison is made within the person. This takes the huge between-person differences out of play. |
+| **Friedman test** | The non-parametric (rank-based) omnibus test of "is there any difference among these k conditions" for repeated measures. The counterpart of ANOVA without its distributional assumption. |
+| **Kendall's W** | Friedman's effect size. 0 = participants rank conditions randomly, 1 = all in the same order. `W = χ² / (n(k−1))`. |
+| **Wilcoxon signed-rank** | Test of the difference between two paired measurements. The non-parametric counterpart of the paired t-test. Computed exactly at n = 12. |
+| **Holm correction** | Controls the false-positive risk in multiple comparisons. A less conservative, step-down version of Bonferroni. |
+| **orthogonal contrast** | Weighting the condition means to reduce them to a single score. If the weights are orthogonal, the linear and quadratic components are tested independently. |
+| **rank-biserial correlation** | Effect size for paired Wilcoxon: in the ranking of \|d\| of non-zero differences, share of positives minus share of negatives, −1…+1. |
+| **d<sub>z</sub>** | Paired-difference effect size: mean difference ÷ standard deviation of the differences. |
 
-## 1. Analiz birimi ve neden
+## 1. Analysis unit and why
 
-**Katılımcı × koşul**, her hücre o kişinin o koşuldaki 10 measurement
-trial'ının ortalaması. 12 × 5 = 60 hücre.
+**Participant × condition**, each cell the mean of that person's 10
+measurement trials in that condition. 12 × 5 = 60 cells.
 
-Trial düzeyinde test edilmiyor çünkü aynı kişinin trial'ları bağımsız değil;
-600 trial'ı bağımsız gözlem saymak yanlış pozitif üretir. Hücre düzeyi bu
-bağımlılığı katılımcı içine kapatıyor.
+No tests at trial level, because the same person's trials are not
+independent; counting 600 trials as independent observations produces false
+positives. Cell level encloses that dependence within the participant.
 
-## 2. Test seçimi
+## 2. Choice of tests
 
-**n = 12.** Bütün testler sıralama tabanlı.
+**n = 12.** All tests are rank-based.
 
-**Uygulama notu (2026-09-02).** Bu bölümün ilk hali "n = 12'de normallik
-varsayımı sınanamaz; parametrik testler riskli" diyordu. Sınandı, ve gerekçe
-düzeltilmesi gerekiyor. `92_varyans_ayrisimi.ipynb` §1, aynı katılımcı × koşul
-tablosunda:
+**Implementation note (2026-09-02).** The first version of this section said
+"at n = 12 the normality assumption cannot be tested; parametric tests are
+risky". It was tested, and the rationale needs correcting.
+`92_varyans_ayrisimi.ipynb` §1, on the same participant × condition table:
 
-| Metrik | Shapiro p | RM-ANOVA | Friedman |
+| Metric | Shapiro p | RM-ANOVA | Friedman |
 |---|---|---|---|
 | `mae_angle_deg` | 0.99 | F(4,44) = 6.71, p = 0.0003 | p = 0.0014 |
 | `stab_time_s` | 0.15 | F(4,44) = 3.18, p = 0.022 | p = 0.021 |
 | `falls_angle_per_trial` | **0.0009** | F(4,44) = 3.16, p = 0.023 | p = 0.0051 |
 
-İlk ikisinde normallik reddedilmiyor ve parametrik test aynı sonucu veriyor.
-Üçüncüsünde normallik açıkça reddediliyor — sayım değişkeni olduğu için
-beklenen bir şey — ve orada Friedman parametrik testten daha güçlü çıkıyor.
+In the first two, normality is not rejected and the parametric test gives the
+same result. In the third, normality is clearly rejected (expected, since it
+is a count variable), and there Friedman comes out stronger than the
+parametric test.
 
-Yani sıralama tabanlı tercih **savunulabilir**, ama gerekçesi "sınanamaz"
-değil: (a) karar metriklerinden biri gerçekten normal değil, (b) n = 12'de
-Shapiro'nun gücü düşük olduğu için diğer ikisinde "reddedilmedi" ile "normal"
-aynı şey değil, (c) üç metrik için tek bir test ailesinde kalmak tutarlı.
-Hiçbir metrikte sonuç test ailesine bağlı olmadığı için karar etkilenmiyor.
+So the rank-based choice is **defensible**, but the reason is not "cannot be
+tested": (a) one of the decision metrics really is not normal, (b) at n = 12
+Shapiro has low power, so in the other two "not rejected" is not the same as
+"normal", (c) staying in one test family for all three metrics is
+consistent. No metric's result depends on the test family, so the decision
+is unaffected.
 
-| Soru | Test | Neden |
+| Question | Test | Why |
 |---|---|---|
-| Beş koşul arasında herhangi bir fark var mı | Friedman + Kendall's W | Tekrarlı ölçüm, non-parametrik omnibus |
-| Hangi seviye baseline'dan farklı | Wilcoxon signed-rank + Holm | Eşleşmiş, exact, çoklu karşılaştırma düzeltmeli |
-| **Şekil: U var mı** | ortogonal kontrast + tek örneklem Wilcoxon | Aşağıda |
+| Is there any difference among the five conditions | Friedman + Kendall's W | Repeated measures, non-parametric omnibus |
+| Which level differs from baseline | Wilcoxon signed-rank + Holm | Paired, exact, corrected for multiple comparisons |
+| **Shape: is there a U** | orthogonal contrast + one-sample Wilcoxon | Below |
 
-## 3. Şekil testi — bu notebook'un asıl işi
+## 3. The shape test: this notebook's real job
 
-Stochastic resonance bir **U şekli** iddiası: uçlar kötü, orta iyi. Bunu
-"koşullar farklı mı" sorusuyla test edemezsin — monoton bozulma da farklılık
-üretir. Şekli ayrı test etmek gerekiyor.
+Stochastic resonance is a claim about a **U shape**: the ends are bad, the
+middle is good. You cannot test it with "do the conditions differ";
+monotonic degradation also produces differences. The shape has to be tested
+separately.
 
-İki ortogonal polinom kontrastı:
+Two orthogonal polynomial contrasts:
 
-| Kontrast | Ağırlıklar | Ne sorar |
+| Contrast | Weights | What it asks |
 |---|---|---|
-| lineer | −2, −1, 0, +1, +2 | Noise arttıkça düzenli bir gidiş var mı |
-| **kuadratik** | +2, −1, −2, −1, +2 | **Ortada tepe/çukur var mı — SR testi** |
+| linear | −2, −1, 0, +1, +2 | Is there a steady trend as noise increases |
+| **quadratic** | +2, −1, −2, −1, +2 | **Is there a peak/trough in the middle: the SR test** |
 
-Prosedür: her katılımcının beş koşul değerine ağırlıklar uygulanıp tek bir
-skor çıkarılıyor (`arr @ weights`), sonra skorlar üzerinde **tek örneklem
-Wilcoxon** (H₀: skorların medyanı sıfır). Yani "bu şekil bileşeni
-katılımcılar arasında tutarlı olarak sıfırdan farklı mı".
+Procedure: the weights are applied to each participant's five condition
+values to get one score (`arr @ weights`), then a **one-sample Wilcoxon** on
+the scores (H₀: median score is zero). I.e. "is this shape component
+consistently different from zero across participants".
 
-**Ağırlıklar ordinal pozisyon üzerinden.** σ değerleri eşit aralıklı değil
-(0, 0.02, 0.05, 0.08, 0.25) ve sıfır içerdiği için log alınamıyor. Ordinal
-kontrast "sıradaki bir sonraki seviye" varsayımı yapıyor; σ ölçeğinde
-gerçek aralıklar dikkate alınmıyor. Bu bir sınır, kayıtta dursun.
+**Weights use ordinal position.** The σ values are not evenly spaced
+(0, 0.02, 0.05, 0.08, 0.25) and include zero, so no log can be taken. An
+ordinal contrast assumes "the next level in line"; the real intervals on the
+σ scale are ignored. This is a limitation and stays on record.
 
-## 4. Kuadratik kontrastın yanına ikinci bir kontrol
+## 4. A second check next to the quadratic contrast
 
-Kontrast testi tek başına bırakılmadı, çünkü null bir kuadratik "U yok"
-demenin en zayıf yolu. `decide.interior_optimum` doğrudan bakıyor:
+The contrast test was not left alone, because a null quadratic is the
+weakest way to say "no U". `decide.interior_optimum` looks directly:
 
-- Grup ortalamasında en iyi koşul hangisi, **iç** bir koşul mu (N1/N2/N3)
-- Kaç katılımcının kendi en iyisi bir iç koşul
+- Which condition is best in the group mean, and is it an **interior** condition (N1/N2/N3)
+- How many participants have an interior condition as their own best
 
-Bu ikinci kontrol nüans üretti: **grup ortalamasında üç metrikte de en iyi
-koşul N1**, yani sayısal tepe iç bir koşulda. Ama N1–baseline farkı hiçbir
-metrikte anlamlı değil ve kuadratik kontrast null. Yorum: bu bir U değil,
-no_noise ile N1'in ayırt edilemezliği.
+This second check produced a nuance: **in the group mean the best condition
+is N1 in all three metrics**, i.e. the numerical peak is at an interior
+condition. But the N1–baseline difference is not significant in any metric
+and the quadratic contrast is null. Interpretation: this is not a U; it is
+no_noise and N1 being indistinguishable.
 
-`decide.personal_best` composite: her metrik katılımcı içinde z-skora
-çevrilip yönüne göre işaretleniyor, metrikler ortalanıyor, en yüksek skorlu
-koşul alınıyor. Sonuç 6 no_noise / 5 N1 / 1 N2 — kimsenin en iyisi N3 ya da
-N4 değil.
+`decide.personal_best` composite: each metric is z-scored within
+participant and signed by its direction, metrics are averaged, and the
+highest-scoring condition is taken. Result 6 no_noise / 5 N1 / 1 N2; nobody's
+best is N3 or N4.
 
-## 5. Çoklu karşılaştırma: nerede düzeltildi, nerede düzeltilmedi
+## 5. Multiple comparisons: where corrected, where not
 
-Holm **bir metriğin dört baseline karşılaştırması içinde** uygulandı.
+Holm was applied **within the four baseline comparisons of one metric**.
 
-Metrikler arası ek düzeltme **yapılmadı**, çünkü üç karar metriği bağımsız
-aile değil.
+No extra correction across metrics **was applied**, because the three
+decision metrics are not independent families.
 
-**Düzeltme (2026-09-02).** Bu gerekçe önce `mae_angle_deg` ile
-`rms_angle_deg` arasındaki r = 0.98'e dayandırılmıştı. O geçersiz bir
-dayanak: `rms_angle_deg` karar metriği değil, dolayısıyla o korelasyon üç
-karar metriğinin ilişkisi hakkında bir şey söylemiyor. Doğru sayılar, kişi
-içi merkezlenmiş katılımcı × koşul tablosunda:
+**Correction (2026-09-02).** This rationale was first based on r = 0.98
+between `mae_angle_deg` and `rms_angle_deg`. That is an invalid basis:
+`rms_angle_deg` is not a decision metric, so that correlation says nothing
+about the relation among the three decision metrics. The correct numbers, on
+the within-person centred participant × condition table:
 
 | | mae | stab | falls |
 |---|---|---|---|
@@ -123,47 +128,51 @@ içi merkezlenmiş katılımcı × koşul tablosunda:
 | `stab_time_s` | −0.86 | 1.00 | −0.39 |
 | `falls_angle_per_trial` | 0.42 | −0.39 | 1.00 |
 
-mae ile stab birbirinin neredeyse kopyası; `falls_angle_per_trial` ise
-kısmen ayrı bir bilgi taşıyor (r ≈ 0.4). Yani "üçü de aynı konstrukt"
-ifadesi ilk ikisi için doğru, üçüncüsü için fazla güçlü.
+mae and stab are almost copies of each other; `falls_angle_per_trial`
+carries partly separate information (r ≈ 0.4). So "all three are the same
+construct" is true for the first two and too strong for the third.
 
-Ama sonucu değiştirmiyor, çünkü düzeltme fiilen hesaplandı. Lineer
-kontrastın üç metriğe Holm uygulanmış hali 0.0015 / 0.0049 / 0.0020 — üçü de
-anlamlı kalıyor. Kuadratik zaten üçünde de 1.00'a düzeltiliyor. Karar
-lineer/kuadratik kontrasta dayandığı için etkilenmiyor.
+It does not change the result, because the correction was actually computed.
+The linear contrast with Holm applied across the three metrics is
+0.0015 / 0.0049 / 0.0020; all three stay significant. The quadratic is
+corrected to 1.00 in all three anyway. The decision rests on the
+linear/quadratic contrast, so it is unaffected.
 
-## 6. Duyarlılık kontrolleri
+## 6. Sensitivity checks
 
-Karar iki seçime duyarlı olabilirdi; ikisi de test edildi.
+The decision could have been sensitive to two choices; both were tested.
 
-**`valid_trial` (`decide.drop_invalid_trials`).** Unity 600 trial'ın 2'sini
-`paused` işaretlemiş; NB01 o kolona bakmıyor (bilinen açık madde), ikisi de
-analize giriyor. Çıkarıldığında koşul sıralaması aynı kalıyor ve tek bir p
-değeri oynuyor: `stab_time_s` kuadratik 0.5693 → 0.6221. İkisi de anlamlılık
-eşiğinden uzak, yani sonuç etkilenmiyor. (İlk hali "hiçbir p oynamıyor"
-diyordu; §6'daki liste zaten 0.62 gösteriyordu, cümle fazla güçlüydü.)
-Kural yine de NB01'e eklenmeli, ama karar buna bağlı değil.
+**`valid_trial` (`decide.drop_invalid_trials`).** Unity marked 2 of 600
+trials as `paused`; NB01 does not look at that column (known open item), so
+both enter the analysis. Dropping them, the condition ranking stays the same
+and one p value moves: `stab_time_s` quadratic 0.5693 → 0.6221. Both are far
+from the significance threshold, so the result is unaffected. (The first
+version said "no p value moves"; the list in §6 already showed 0.62, so the
+sentence was too strong.) The rule should still be added to NB01, but the
+decision does not depend on it.
 
-**Stabilizasyon eşiği (`decide.threshold_sensitivity`).** `stab_time_s`
-bizim eşiğimizle hesaplanıyor (|θ| ≤ 30°, gerekçe `Yontem/04`). Eşik bizim
-seçimimiz olduğu için sonuç ona duyarlı olmamalı. 5°–45° taraması: her
-eşikte lineer anlamlı (p ≤ 0.0068), hiçbirinde kuadratik anlamlı değil
-(p = 0.38–0.57).
+**Stabilization threshold (`decide.threshold_sensitivity`).** `stab_time_s`
+uses our own threshold (|θ| ≤ 30°, rationale in `Setup/04`). Since the
+threshold is our choice, the result should not depend on it. 5°–45° sweep:
+linear significant at every threshold (p ≤ 0.0068), quadratic significant at
+none (p = 0.38–0.57).
 
-## 7. Neyi beslediği
+## 7. What it feeds
 
-Ana deneyin noise seviyesi seçimi. Aday sıralaması ve ekibe sorulacak soru
-[../Pilot_Sonuc_Ozeti.md](Pilot1_Sonuc_Ozeti.md) → "Ana deney için aday
-sıralaması" bölümünde.
+The choice of noise level for the main experiment. The candidate ranking and
+the question for the team are in [Pilot1_Results_Summary.md](Pilot1_Results_Summary.md),
+section "Candidate ranking for the main experiment". (The noise study was
+later closed; see `Analysis_Log.md`, 2026-09-08.)
 
-## 8. Bu kayıtta olmayanlar
+## 8. Not in this record
 
-- **Güç analizi yok.** "Bu tasarımla ne kadar küçük bir etki saptanabilirdi"
-  sorusu NB05'in işi. N1'in null çıkması "fark yok" değil, "bu örneklemle
-  saptanamadı" demek. Kısmen kapandı: `92_varyans_ayrisimi.ipynb` varyans
-  ayrışımını ve kişi içi güvenilirliği ölçtü, oradan gereken deneme sayısı
-  için bir mertebe tahmini çıkıyor. Klasik güç analizi hâlâ yok.
-- **Bayes faktörü hesaplanmadı.** Null bulguyu (N1 = baseline) kanıt olarak
-  sunmak istersek gereken şey bu; şimdilik sadece "ayırt edilemedi" deniyor.
-- **Action timing dahil değil** (NB04). Koşullar arasında ayırt edici
-  olmadığı için karar setine girmedi.
+- **No power analysis.** "How small an effect could this design detect" was
+  NB05's job. N1 being null means "not detectable with this sample", not "no
+  difference". Partly closed: `92_varyans_ayrisimi.ipynb` measured the
+  variance decomposition and within-person reliability, which gives an
+  order-of-magnitude estimate of the required trial count. A classical power
+  analysis for pilot1 is still missing (pilot2's is in `Pilot2_Results_Summary.md`).
+- **No Bayes factor.** That is what would be needed to present the null
+  finding (N1 = baseline) as evidence; for now it is only "not distinguishable".
+- **Action timing not included** (NB04). It did not separate conditions, so
+  it did not enter the decision set.

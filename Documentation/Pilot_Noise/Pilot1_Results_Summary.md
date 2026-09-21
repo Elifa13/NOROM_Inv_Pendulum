@@ -1,105 +1,105 @@
-# Pilot sonuç özeti
+# Pilot 1 results summary
 
-**Veri:** 12 katılımcı (P001–P012), tek oturum, 53 trial (3 practice + 50
-measurement). Toplama 26–27 Ağustos 2026.
-**Analiz:** `Notebooks/06_noise_decision.ipynb`, `src/decide.py`
-(karar metrik seti `03_performance.ipynb`'te seçildi)
-**Çıktılar:** `data/pilot1/processed/karar/` — `decision_stats.csv`,
+**Data:** 12 participants (P001–P012), single session, 53 trials (3 practice +
+50 measurement). Collected 26–27 August 2026.
+**Analysis:** `Notebooks/pilot_noise/pilot1/06_noise_decision.ipynb`, `src/decide.py`
+(the decision metric set was chosen in `03_performance.ipynb`)
+**Outputs:** `data/pilot1/processed/karar/`: `decision_stats.csv`,
 `decision_table.csv`
 
-> Bu belge **pilot 1**'i anlatıyor. İkinci pilot (9 kişi, σ ≤ 0.02) için
-> [Pilot2_Sonuc_Ozeti.md](Pilot2_Sonuc_Ozeti.md). İki setin katılımcı id'leri
-> ve koşul etiketleri çakışıyor ama aynı şeyi göstermiyor.
+> This document describes **pilot 1**. For the second pilot (10 people,
+> σ ≤ 0.02) see [Pilot2_Results_Summary.md](Pilot2_Results_Summary.md). The two sets'
+> participant ids and condition labels overlap but do not mean the same thing.
 
-Daha önce bu belge acil sunum notebook'unun (`90_sunum.ipynb`) sayılarını
-taşıyordu. 31 Ağustos'ta NB06 yazıldı ve sayılar zincirin kendi
-çıktılarıyla değiştirildi. Tek farklılık düşüş metriğinde: sunum bütün
-düşüşleri sayıyordu, karar seti **sadece açı kaynaklı** olanları sayıyor
-(ray kaybı ayrı bir başarısızlık, bkz. `Yontem/03`).
+This document used to carry the numbers of the emergency presentation
+notebook (`90_sunum.ipynb`). On 31 August NB06 was written and the numbers
+were replaced with the chain's own output. The only difference is in the
+fall metric: the presentation counted all falls, the decision set counts
+**only angle-caused** ones (track loss is a separate failure, see `Setup/03`).
 
-Bu belge `Documentation/CartPole_VisualNoise_Pilot_Sunumu (1).pptx` ve
-`Kalibrasyon_Pilot_Calismasi_Veri_Ozeti (1).docx` dosyalarının yerine
-geçmez ama onlardan **daha güncel**: ikisi de 26 Ağustos tarihli, yani
-12 katılımcılık analizden önce hazırlanmış, içlerindeki sayılar artık
-geçerli değil.
+This document does not replace `Pilot_Noise/archive/CartPole_VisualNoise_Pilot_Sunumu (1).pptx`
+and `Kalibrasyon_Pilot_Calismasi_Veri_Ozeti (1).docx`, but it is **more up to
+date** than them: both are dated 26 August, i.e. prepared before the
+12-participant analysis, and their numbers are no longer valid.
 
 ---
 
-## Sonuç
+## Result
 
-**Stochastic resonance hipotezi pilotta desteklenmiyor.** Orta düzey noise'ta
-iyileşme yok; performans noise arttıkça monoton olarak bozuluyor.
+**The stochastic resonance hypothesis is not supported in the pilot.** No
+improvement at medium noise; performance degrades monotonically as noise increases.
 
-Beklenen şekil (Treviño 2016'daki ters-U) ile gözlenen şekil arasındaki fark,
-istatistikte doğrudan görünüyor: lineer trend her metrikte güçlü ve anlamlı,
-kuadratik trend hiçbirinde anlamlı değil.
+The difference between the expected shape (the inverted U in Treviño 2016)
+and the observed one shows directly in the statistics: the linear trend is
+strong and significant in every metric, the quadratic trend in none.
 
-## Koşul × metrik
+## Condition × metric
 
-Analiz birimi katılımcı × koşul (10 trial'ın ortalaması), n = 12.
+Analysis unit participant × condition (mean of 10 trials), n = 12.
 
-| Metrik | Yön | no_noise | N1 (σ0.02) | N2 (σ0.05) | N3 (σ0.08) | N4 (σ0.25) |
+| Metric | Direction | no_noise | N1 (σ0.02) | N2 (σ0.05) | N3 (σ0.08) | N4 (σ0.25) |
 |---|---|---|---|---|---|---|
-| Mean absolute angle (°) | düşük iyi | 11.25 | **11.20** | 12.28 | 12.51 | 12.66 |
-| Stabilizasyon (s / 20 s) | yüksek iyi | 18.37 | **18.49** | 18.05 | 18.08 | 18.09 |
-| Açı kaynaklı düşüş / trial | düşük iyi | 1.60 | **1.47** | 1.78 | 1.70 | 2.00 |
-| Control effort (RMS u) | belirsiz | 0.206 | 0.209 | 0.209 | 0.200 | 0.208 |
-| Cart RMS (m) | belirsiz | 1.09 | 1.13 | 1.02 | 1.14 | 1.04 |
+| Mean absolute angle (°) | lower is better | 11.25 | **11.20** | 12.28 | 12.51 | 12.66 |
+| Stabilization (s / 20 s) | higher is better | 18.37 | **18.49** | 18.05 | 18.08 | 18.09 |
+| Angle-caused falls / trial | lower is better | 1.60 | **1.47** | 1.78 | 1.70 | 2.00 |
+| Control effort (RMS u) | ambiguous | 0.206 | 0.209 | 0.209 | 0.200 | 0.208 |
+| Cart RMS (m) | ambiguous | 1.09 | 1.13 | 1.02 | 1.14 | 1.04 |
 
-Koşul sıralaması (1 = en iyi, üç karar metriğinin ortalaması):
+Condition ranking (1 = best, mean of the three decision metrics):
 **N1 (1.0) → no_noise (2.0) → N3 (3.67) → N2 (4.0) → N4 (4.33)**.
-N1 üç metrikte de sayısal olarak en iyi — ama aşağıdaki testlerde
-baseline'dan ayırt edilemiyor.
+N1 is numerically best in all three metrics, but in the tests below it cannot
+be distinguished from baseline.
 
-Örüntü bütün metriklerde aynı: **no_noise ile N1 birbirine yapışık, N2'den
-itibaren bozulma.**
+The pattern is the same in all metrics: **no_noise and N1 together,
+degradation from N2 on.**
 
-## İstatistik
+## Statistics
 
-Friedman (5 koşul, n = 12), ardından baseline'a karşı Wilcoxon, Holm
-düzeltmeli. Trend kontrastları ordinal pozisyon üzerinden.
+Friedman (5 conditions, n = 12), then Wilcoxon against baseline with Holm
+correction. Trend contrasts use ordinal position.
 
-| Metrik | Friedman p | Kendall's W | Lineer p | Kuadratik p |
+| Metric | Friedman p | Kendall's W | Linear p | Quadratic p |
 |---|---|---|---|---|
 | Mean absolute angle | **0.0014** | 0.37 | **0.00049** | 0.62 |
-| Stabilizasyon süresi | **0.021** | 0.24 | **0.0049** | 0.57 |
-| Açı kaynaklı düşüş | **0.0051** | 0.31 | **0.00098** | 0.58 |
+| Stabilization time | **0.021** | 0.24 | **0.0049** | 0.57 |
+| Angle-caused falls | **0.0051** | 0.31 | **0.00098** | 0.58 |
 | Control effort | 0.75 | 0.04 | 1.00 | 0.38 |
 | Cart RMS | 0.13 | 0.15 | 0.68 | 1.00 |
 
-Lineer kontrast `mae_angle_deg`'de **12 katılımcının 12'sinde** aynı yönde.
+The linear contrast for `mae_angle_deg` points the same way in **12 of 12**
+participants.
 
-### Hangi seviye baseline'dan farklı
+### Which level differs from baseline
 
-Eşleşmiş Wilcoxon, Holm düzeltmesi metrik içinde (dört karşılaştırma).
+Paired Wilcoxon, Holm correction within metric (four comparisons).
 
-| Koşul | maPA fark | d<sub>z</sub> | p (Holm) | Aynı yönde |
+| Condition | maPA difference | d<sub>z</sub> | p (Holm) | Same direction |
 |---|---|---|---|---|
 | N1 | −0.05 | −0.03 | 0.91 | 6/12 |
 | N2 | +1.03 | 1.18 | **0.015** | 11/12 |
 | N3 | +1.26 | 1.17 | **0.014** | 11/12 |
 | N4 | +1.41 | 0.96 | **0.019** | 11/12 |
 
-Diğer iki metrikte Holm sonrası yalnız N4 ayakta kalıyor
-(`falls_angle_per_trial` p = 0.039). Üç metrik birbiriyle güçlü ilişkili
-(kişi içi merkezlenmiş: maPA–stabilizasyon r = −0.86, maPA–düşüş r = 0.42),
-yani tam bağımsız kanıt değil; metrikler arası ek düzeltme yapılmadı. Sonradan
-hesaplandı, yapılsaydı da değişmezdi: lineer kontrastın üç metriğe Holm
-uygulanmış hali 0.0015 / 0.0049 / 0.0020, üçü de anlamlı kalıyor.
+In the other two metrics only N4 survives Holm (`falls_angle_per_trial`
+p = 0.039). The three metrics are strongly related (within-person centred:
+maPA–stabilization r = −0.86, maPA–falls r = 0.42), so they are not fully
+independent evidence; no extra correction across metrics was applied. It was
+computed later and would not have changed anything: the linear contrast with
+Holm across the three metrics is 0.0015 / 0.0049 / 0.0020, all three stay significant.
 
-**Kuadratik terim hiçbir metrikte anlamlı değil.** Ters-U olsaydı burada
-görünürdü.
+**The quadratic term is not significant in any metric.** An inverted U would
+have shown up here.
 
-Baseline'a karşı ikili karşılaştırmalar (maPA, Holm sonrası): N1 p = 0.91
-(fark yok), N2 p = 0.015, N3 p = 0.014, N4 p = 0.019 — üçü de anlamlı
-şekilde **kötü**.
+Pairwise comparisons against baseline (maPA, after Holm): N1 p = 0.91 (no
+difference), N2 p = 0.015, N3 p = 0.014, N4 p = 0.019, all three significantly **worse**.
 
-## Eşik seçimi sonucu değiştirmiyor
+## The threshold choice does not change the result
 
-"Başarılı stabilizasyon" eşiği 5°–45° arasında tarandı. Yön bütün eşiklerde
-aynı; etki büyüklüğü dar eşiklerde daha güçlü.
+The "successful stabilization" threshold was swept from 5° to 45°. The
+direction is the same at every threshold; the effect size is stronger at
+narrow thresholds.
 
-| Eşik | no_noise | N4 | dz | Aynı yönde kişi | Lineer p |
+| Threshold | no_noise | N4 | dz | Same direction | Linear p |
 |---|---|---|---|---|---|
 | 5° | 7.16 | 6.10 | −1.34 | 10/12 | 0.00049 |
 | 10° | 12.40 | 11.02 | −1.30 | 11/12 | 0.00049 |
@@ -109,89 +109,92 @@ aynı; etki büyüklüğü dar eşiklerde daha güçlü.
 | 30° | 18.37 | 18.09 | −0.45 | 10/12 | 0.0049 |
 | 45° | 19.49 | 19.38 | −0.51 | 8/12 | 0.0068 |
 
-Geniş eşiklerde tavan etkisi devreye giriyor (45°'de zamanın %97'si eşik
-içinde), o yüzden etki sönüyor. Ana figürler 30° ile çizildi.
+At wide thresholds a ceiling effect kicks in (at 45°, 97% of the time is
+within the threshold), so the effect fades. The main figures use 30°.
 
-## Kişisel optimal seviye
+## Personal optimal level
 
-Her katılımcı için composite sıralamada en iyi koşul (composite: maPA,
-stabilizasyon süresi, düşüş sayısı):
+For each participant, the best condition in the composite ranking
+(composite: maPA, stabilization time, fall count):
 
-| Optimal | Katılımcı |
+| Optimal | Participants |
 |---|---|
 | no_noise | P002, P003, P005, P007, P010, P011 (6) |
 | N1 | P001, P004, P008, P009, P012 (5) |
 | N2 | P006 (1) |
 
-**Hiçbir katılımcının optimali N3 veya N4 değil.** 12 kişinin 11'inde
-optimal ya no_noise ya N1 — yani "noise yok" ile "en düşük noise" arasında.
-(Composite NB06'da z-skor üzerinden yeniden hesaplandı; sunum sürümünde
-P004 beraberlikte kalmıştı, şimdi N1'e düşüyor.)
+**No participant's optimum is N3 or N4.** For 11 of 12 people the optimum is
+either no_noise or N1, i.e. between "no noise" and "lowest noise". (The
+composite was recomputed in NB06 on z-scores; in the presentation version
+P004 was tied, now it falls to N1.)
 
-## Karar iki kontrole de dayanıyor
+## The decision rests on both checks
 
-**(a) `valid_trial`.** Unity 600 measurement trial'ın 2'sini `paused` diye
-işaretlemiş (P011 T030, T034); NB01'in kalite kontrolü o kolona bakmıyor, yani
-ikisi de analize giriyor. Çıkarıldığında koşul sıralaması aynı kalıyor ve tek
-bir p oynuyor: `stab_time_s` kuadratik 0.57 → 0.62. Diğerleri sabit
-(lineer 0.00049 / 0.0049 / 0.00098, kuadratik 0.62 / 0.62 / 0.58). İkisi de
-anlamlılık eşiğinden uzak, sonuç etkilenmiyor.
+**(a) `valid_trial`.** Unity marked 2 of 600 measurement trials as `paused`
+(P011 T030, T034); NB01's quality control does not look at that column, so
+both enter the analysis. Dropping them, the condition ranking stays the same
+and one p moves: `stab_time_s` quadratic 0.57 → 0.62. The others are
+unchanged (linear 0.00049 / 0.0049 / 0.00098, quadratic 0.62 / 0.62 / 0.58).
+Both are far from the significance threshold; the result is unaffected.
 
-**(b) Stabilizasyon eşiği.** 5°–45° arasında tarandı: **her eşikte lineer
-anlamlı (p ≤ 0.0068), hiçbir eşikte kuadratik anlamlı değil** (p = 0.38–0.57).
-En iyi koşul eşiğe göre no_noise ile N1 arasında gidip geliyor — ikisinin
-ayırt edilemez olduğunun bir başka göstergesi.
+**(b) Stabilization threshold.** Swept from 5° to 45°: **linear significant
+at every threshold (p ≤ 0.0068), quadratic significant at none**
+(p = 0.38–0.57). The best condition flips between no_noise and N1 depending
+on the threshold, another sign that the two are indistinguishable.
 
-## Ham veri doğrulaması
+## Raw data verification
 
-Dört metrik ham CSV'lerden bağımsız olarak yeniden hesaplandı ve parquet
-zincirinin sonucuyla karşılaştırıldı (`presentation.raw_verification`).
-Zincirde bir kayma yok.
+Four metrics were recomputed independently from the raw CSVs and compared
+with the result of the parquet chain (`presentation.raw_verification`). No
+drift in the chain.
 
-## Sınırlar
+## Limitations
 
-1. **Randomizasyon sabit seed'e bağlı.** Bütün katılımcılar aynı koşul
-   sırasını ve aynı noise desenini görüyor. Başlangıç açıları da tek bir
-   sabit diziden geliyor. Etkisi ölçüldü ve küçük (koşullar arası başlangıç
-   |θ| yayılımı 0.35°, sonuçla korelasyon +0.066) ve **yönü bulgunun
-   aleyhine** — en zor başlangıçlar no_noise'da. Ayrıntı: `CLAUDE.md` →
-   "Veride görülen sorunlar" §1.
-2. **Pilot anlık performansı ölçüyor, öğrenmeyi değil.** Ludolph'un bulgusu
-   bu ikisinin ayrışabileceği yönünde: bir koşul anlık performansta kötü
-   olup öğrenmede iyi olabilir. Ana deneye tek seviye yerine sıralı iki
-   aday yazmak makul bir hedge.
-3. **SR'nin bu göreve transferi zaten açık bir soru.** Treviño'nun kritik ön
-   koşulu sinyalin kasıtlı olarak eşiğin altına indirilmesiydi (düşük
-   coherence + düşük luminance). Cart-pole'daki pole yüksek kontrastlı ve
-   büyük — eşiğin çok üzerinde. Yani negatif sonuç, SR'nin yanlış olduğunu
-   değil, bu görevde uygulanabilir olmadığını gösteriyor olabilir.
+1. **Randomization depended on a fixed seed.** All participants saw the same
+   condition order and the same noise pattern. Initial angles also came from
+   a single fixed sequence. The effect was measured and is small
+   (between-condition spread of initial |θ| 0.35°, correlation with outcome
+   +0.066), and **its direction works against the finding**: the hardest
+   starts are in no_noise. Details: `Recording_Requests.md`, item 1. Fixed before pilot 2.
+2. **The pilot measures immediate performance, not learning.** Ludolph's
+   finding points to these two being separable: a condition can be bad for
+   immediate performance and good for learning. Writing two ranked candidates
+   into the main experiment instead of a single level was a reasonable hedge.
+3. **Transfer of SR to this task was an open question anyway.** Treviño's
+   critical precondition was pushing the signal deliberately below threshold
+   (low coherence + low luminance). The pole in the cart-pole is high-contrast
+   and large, far above threshold. So the negative result may show not that
+   SR is wrong but that it does not apply to this task.
 
-## Ana deney için aday sıralaması
+## Candidate ranking for the main experiment
 
-**1. aday — N1 (σ = 0.02).** Görsel noise var ama performansı ölçülebilir
-şekilde bozmuyor (p ≈ 0.91, d<sub>z</sub> ≤ 0.20, 6/12). "Noise altında
-öğrenme" sorusu, noise'un anlık performansı zaten yıkmadığı bir seviyede
-sorulmalı; aksi halde öğrenme farkı ile performans bozulması birbirine
-karışır.
+*Historical: the noise study was closed after pilot 2 and the main
+experiment became GAP (see `Analysis_Log.md`, 2026-09-08).*
 
-**2. aday — N2 (σ = 0.05).** Etkisi ölçülebilir olan **en düşük** seviye
-(d<sub>z</sub> = 1.18, 11/12). Soru "noise öğrenmeyi bozuyor mu" şeklinde
-kurulursa tercih edilir, ama anlık performansı da bozduğu için iki etki
-ayrışamayabilir.
+**Candidate 1: N1 (σ = 0.02).** Visual noise is present but does not
+measurably degrade performance (p ≈ 0.91, d<sub>z</sub> ≤ 0.20, 6/12). The
+"learning under noise" question should be asked at a level where noise does
+not already wreck immediate performance; otherwise the learning difference
+and the performance degradation get mixed up.
 
-**N3 ve N4 eleniyor.** N3 ile N4 arasında anlamlı fark yok, yani daha
-yüksek noise ek bilgi getirmiyor; N4 zaten en kötü koşul.
+**Candidate 2: N2 (σ = 0.05).** The **lowest** level with a measurable
+effect (d<sub>z</sub> = 1.18, 11/12). Preferred if the question is "does
+noise impair learning", but since it also degrades immediate performance the
+two effects may not be separable.
 
-### Sıralama bir soruya bağlı
+**N3 and N4 are dropped.** No significant difference between N3 and N4, so
+higher noise brings no extra information; N4 is already the worst condition.
 
-Ana deney **tek noise seviyesi + no_noise kontrol grubu** mu kullanacak,
-yoksa **herkes aynı noise'u** mu alacak? Ekibe soruldu, cevap gelmedi.
+### The ranking depends on one question
 
-- **Kontrol grubu varsa:** N1 ile no_noise arasındaki fark bu pilotta
-  saptanamayacak kadar küçük; böyle bir tasarımda muhtemelen null sonuç
-  çıkar. Bu durumda N2 daha bilgilendirici.
-- **Herkes aynı noise'u alıyorsa:** noise'un görevi öğrenmeyi ölçmeyi
-  engellememek, yani N1.
+Will the main experiment use **a single noise level + a no_noise control
+group**, or will **everyone get the same noise**? The team was asked; no answer.
 
-Cevaba göre aday sırası **değişiyor**. NB06 her iki durum için gereken
-sayıları üretti.
+- **If there is a control group:** the difference between N1 and no_noise is
+  too small to detect in this pilot; such a design would likely give a null
+  result. In that case N2 is more informative.
+- **If everyone gets the same noise:** the noise's job is not to prevent
+  measuring learning, so N1.
+
+The candidate order **changes** with the answer. NB06 produced the numbers
+needed for both cases.

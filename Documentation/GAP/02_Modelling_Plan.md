@@ -1,488 +1,515 @@
-# GAP: Modelleme Planı
+# GAP: Modelling plan
 
-rev 4, 2026-09-09. Random force kolu bu belgenin dışında.
+rev 4, 2026-09-09. The random force arm is outside this document.
 
-Bu belge benim çalışma planım. Toplantıya giren belge
-[01_Kayit_Istekleri.md](01_Kayit_Istekleri.md). Buradaki her analiz, oradaki
-bir kayıt isteğinin gerekçesi. Tasarımın tamamı [00_Tasarim.md](00_Tasarim.md).
+This document is my working plan. The document that goes to the meeting is
+[01_Recording_Requests.md](01_Recording_Requests.md). Every analysis here is the
+justification for a recording request there. Full design in [00_Design.md](00_Design.md).
 
-**Rev 3'te değişenler.** Yerçekimi artışı sabit takvime bağlandığı için C
-analizindeki regression to the mean tartışması gereksizleşti. Buna karşılık
-occlusion deneme sayısı belli oldu ve az: kişi başına 80, Ludolph'ta 440. D ve
-E analizlerinin kişi düzeyinde yapılabilirliği açık bir soru haline geldi ve
-simülasyonla güç hesabı önceliğe çıktı.
+**Changes in rev 3.** Since the gravity increase was tied to a fixed
+schedule, the regression-to-the-mean discussion in analysis C became
+unnecessary. On the other hand, the number of occlusion trials became known,
+and it is small: 80 per person, versus 440 in Ludolph. Whether D and E can be
+done at person level became an open question, and the simulation-based power
+analysis moved up in priority.
 
-**Rev 4'te değişenler.** Kontrol grubunun bütün seans boyunca g = 1.0'da
-kaldığı netleşti. Bu, planın çerçevesini değiştiriyor. Gruplar arası
-karşılaştırma artık "aynı zorlukta kim daha iyi" değil, "aynı iki noktada kim
-ne kadar kaydı". Bütün ana analizler difference-in-differences şeklinde
-yeniden kuruldu. Occlusion uyaranlarının hepsinin g = 1.0 olduğu kesinleşti ve
-bu, korktuğum confound'u hipotezin aleyhine çevirdiği için sorun olmaktan
-çıktı.
-
----
-
-## Neden model kuruyoruz
-
-Ölçmek istediğimiz üç şeyin hiçbiri doğrudan gözlenmiyor.
-
-Kişinin ne kadar öğrendiği gözlenmiyor, performansı gözleniyor.
-Kişinin kafasındaki yerçekimi gözlenmiyor, verdiği kuvvet gözleniyor.
-Kişinin iç modeli gözlenmiyor, tahmini gözleniyor.
-
-Üçü de latent değişken. Gözlenen davranıştan geri çıkarılmaları gerekiyor. Bu
-bir system identification problemi ve trial ortalamalarıyla çözülmüyor.
+**Changes in rev 4.** It was clarified that the control group stays at
+g = 1.0 for the whole session. This changes the frame of the plan. The group
+comparison is no longer "who is better at the same difficulty" but "who
+shifted how much between the same two points". All main analyses were
+rebuilt as difference-in-differences. It was confirmed that all occlusion
+stimuli are at g = 1.0, and since this turns the confound I was worried about
+against the hypothesis, it stopped being a problem.
 
 ---
 
-## Bütün analizler için geçerli üç kural
+## Why we build models
 
-**Gruplar sadece g = 1.0'da karşılaştırılır.** Kontrol grubu bütün seansı
-1.0'da geçiriyor, gradual grup ise sadece aşama 1, 2, 3 ve 8'de orada. Geri
-kalan her yerde iki grup farklı yerçekimlerinde farklı görevler yapıyor ve
-aradaki performans farkı öğrenme farkı değil, zorluk farkı. Yani gruplar arası
-her karşılaştırma bu dört aşamada kurulur.
+None of the three things we want to measure is observed directly.
 
-Bunun doğal sonucu, ana analizlerin difference-in-differences olması. Gradual
-grubun aşama 8 eksi aşama 2 farkı iki şey içeriyor: aftereffect, artı seans
-boyunca pratik yapmaktan gelen genel iyileşme. Kontrol grubu aynı iki noktayı
-hiç adaptasyon yaşamadan veriyor, yani o genel iyileşmenin ölçüsü. İki farkın
-farkı saf aftereffect. Aynı yapı algısal tarafta da geçerli: post-test eksi
-pre-test, gradual grupta kontrol grubundakinden farklı mı.
+How much the person learned is not observed; their performance is.
+The gravity in the person's head is not observed; the force they apply is.
+The person's internal model is not observed; their prediction is.
 
-**Bu tasarım Ludolph'un sorusunu soramaz.** Onun sabit kolu 3.5'teydi ve iki
-grup aynı zorlukta bitiyordu, o yüzden "kademeli eğitim daha iyi mi"
-sorulabiliyordu. Burada öyle bir nokta yok. Rapor yazılırken bu iddia
-kurulmayacak.
-
-**Sabit grupta yerçekimi adımı yok.** Adıma dayanan analizlerin (B ve C)
-örneklemi tek gruptur, gradual grup. Kontrol grubu orada yok.
-
-**Occlusion tarafında asıl büyüklük kişi içi değişimdir.** İki ölçüm noktamız
-var, aynı kişide, aynı uyaranlarla. Kişi içi fark, kişi düzeyi gürültüyü
-(genel dikkat, görev anlayışı, temel yanlılık) siliyor. Ludolph bunu
-yapamamış, çünkü onun motor grubu 335 gün önce eğitilmişti ve tek ölçüm
-noktası vardı. Bu, az deneme sayısının bir kısmını telafi eden şey.
+All three are latent variables. They have to be inferred back from observed
+behaviour. This is a system identification problem and it is not solved with
+trial averages.
 
 ---
 
-## Analizler
+## Three rules for all analyses
 
-Yedi analiz var. A ve D temel, diğerleri onların üstüne kuruluyor.
+**Groups are compared only at g = 1.0.** The control group spends the whole
+session at 1.0; the gradual group is there only in phases 1, 2, 3 and 8.
+Everywhere else the two groups do different tasks at different gravities,
+and a performance difference between them is a difficulty difference, not a
+learning difference. So every group comparison is built on these four phases.
+
+The natural consequence is that the main analyses are
+difference-in-differences. The gradual group's phase 8 minus phase 2 contains
+two things: the aftereffect, plus general improvement from practising over
+the session. The control group gives the same two points without any
+adaptation, i.e. a measure of that general improvement. The difference of
+the two differences is the pure aftereffect. The same structure applies on
+the perceptual side: is post-test minus pre-test different in the gradual
+group than in the control group?
+
+**This design cannot ask Ludolph's question.** His constant arm was at 3.5
+and both groups ended at the same difficulty, so "is gradual training better"
+could be asked. There is no such point here. This claim will not be made
+when writing up.
+
+**The constant group has no gravity steps.** The sample for step-based
+analyses (B and C) is a single group, the gradual group. The control group is
+not in them.
+
+**On the occlusion side the main quantity is within-person change.** We have
+two measurement points, in the same person, with the same stimuli. The
+within-person difference removes person-level noise (general attention, task
+understanding, baseline bias). Ludolph could not do this, because his motor
+group had been trained 335 days earlier and there was one measurement point.
+This is what partly compensates for the small number of trials.
 
 ---
 
-### A. Kontrolcü tanımlaması
+## Analyses
 
-**Amaç.** Kişinin kontrol politikasını bir fonksiyon olarak çıkarmak, ve bu
-fonksiyonun yerçekimi arttıkça nasıl değiştiğini görmek.
+There are seven analyses. A and D are the foundations; the others build on them.
 
-**Hangi veri.** `timeseries.csv`, sadece aktif örnekler. Girdi olarak
-`pole_angle_deg`, `pole_angular_velocity_deg_s`, `cart_position_m`,
-`cart_velocity_m_s` ve bir önceki input. Hedef olarak `stick_raw`. Bölmek için
-`gravity_step_index` ve `phase_label`. Zamanlama için `frame_time_s` ve
-`render_frame_count`.
+---
 
-**Yöntem.** İki aşamalı model, çünkü input dağılımı yığılmalı. Pilotta
-örneklerin %73.9'u tam sıfır. Düz regression bu veride sürekli sıfıra yakın
-tahmin eder ve hiçbir şey öğrenmez.
+### A. Controller identification
 
-1. Müdahale var mı yok mu. Binary sınıflandırma.
-2. Varsa ne kadar ve hangi işarette. Regression.
+**Goal.** Extract the person's control policy as a function, and see how that
+function changes as gravity increases.
 
-Gecikme varsayılmaz, fit edilir. State t eksi d anından okunuyor, d 0 ile 400 ms
-arasında taranıp held-out likelihood'u maksimize eden seçiliyor. d'nin kendisi
-de bir sonuç.
+**Data.** `timeseries.csv`, active samples only. Inputs: `pole_angle_deg`,
+`pole_angular_velocity_deg_s`, `cart_position_m`, `cart_velocity_m_s` and the
+previous input. Target: `stick_raw`. For splitting: `gravity_step_index` and
+`phase_label`. For timing: `frame_time_s` and `render_frame_count`.
 
-Model merdiveni: ridge, sonra LightGBM, gerekirse küçük bir MLP. Her basamağa
-çıkmak için held-out kazancın gerçek olması şart.
+**Method.** A two-stage model, because the input distribution is
+zero-inflated. In the pilot, 73.9% of samples are exactly zero. A plain
+regression would keep predicting near zero on this data and learn nothing.
 
-**Bölümleme, rev 3'te sadeleşti.** Rev 2'de "adım başına çok az trial düşebilir,
-fit oturmaz" diye adımları birleştirmeyi planlamıştım. Bu endişe geçersiz:
-tasarım dengeli, her adımda tam 8 trial var ve hepsi 20 saniye. Adım başına
-8 x 20 x 60 = 9.600 örnek düşüyor, ridge fit için fazlasıyla yeterli. Yani
-politika **adım adım** fit edilebilir, on ayrı fit. Aralık birleştirmek
-gerekirse bu bir sadeleştirme tercihi olur, zorunluluk değil.
+1. Is there an intervention or not. Binary classification.
+2. If so, how large and with what sign. Regression.
 
-**Kritik metodolojik nokta.** 60 Hz'de ardışık örnekler birbirinin neredeyse
-kopyası. Cross-validation asla rastgele sample bölerek yapılmaz, hep trial ya da
-blok bloğu ayrılır. Aksi halde her şey anlamlı çıkar ve hepsi sahtedir.
+Delay is not assumed, it is fitted. The state is read at time t minus d; d is
+swept from 0 to 400 ms and the value that maximizes held-out likelihood is
+chosen. d itself is also a result.
 
-Analiz ikinci bir birimde de tekrarlanacak: input event. Onset anındaki state
-girdi, o event'in genliği ve süresi çıktı. Bu, otokorelasyon problemini kökünden
-çözüyor. Sample modeli detay için, event modeli karar için.
+Model ladder: ridge, then LightGBM, a small MLP if needed. Moving up a rung
+requires a real held-out gain.
 
-**İç kontrol.** Politikanın gerçekten değiştiğini doğrulamak için, sadece
-kişinin inputundan yerçekimini tahmin etmeye çalışacağız. Buradaki incelik
-önemli: modele state verilmez. Verilirse model yerçekimini kişinin
-davranışından değil doğrudan fizikten okur, çünkü pole'un ivmesi zaten
-yerçekiminin fonksiyonu. O zaman ölçtüğün şey bir fizik dedektörü olur, insanla
-ilgisi kalmaz. Bu yüzden bu bir kontrol, ayrı bir bulgu değil.
+**Splitting, simplified in rev 3.** In rev 2 I planned to merge steps because
+"too few trials may fall in each step for the fit to settle". That concern is
+void: the design is balanced, every step has exactly 8 trials of 20 seconds.
+That is 8 x 20 x 60 = 9,600 samples per step, more than enough for a ridge
+fit. So the policy can be fitted **step by step**, ten separate fits. Merging
+ranges, if done, would be a simplification choice, not a necessity.
 
-**Çıktı.** Her (kişi × adım) için gain vektörü, gecikme, held-out skor.
+**Critical methodological point.** At 60 Hz consecutive samples are near
+copies of each other. Cross-validation is never done by splitting samples at
+random; whole trials or blocks are always held out. Otherwise everything
+comes out significant and all of it is fake.
 
-**Bağlı istekler.** `gravity`, `gravity_step_index`, `stick_raw`,
+The analysis will be repeated on a second unit: the input event. The state at
+onset is the input, the event's amplitude and duration are the output. This
+solves the autocorrelation problem at the root. The sample model for detail,
+the event model for decisions.
+
+**Internal control.** To verify that the policy really changes, we will try
+to predict gravity from the person's input alone. The subtlety matters: the
+model is not given the state. If it were, it would read gravity directly from
+the physics rather than from the person's behaviour, because the pole's
+acceleration is already a function of gravity. Then what you measure is a
+physics detector with nothing to do with the human. That is why this is a
+control, not a separate finding.
+
+**Output.** For each (person × step): gain vector, delay, held-out score.
+
+**Related requests.** `gravity`, `gravity_step_index`, `stick_raw`,
 `frame_time_s`, `render_frame_count`.
 
 ---
 
-### B. Politika kayması
+### B. Policy drift
 
-**Amaç.** Adaptation hızını, hiçbir parametreyi yorumlamadan ölçmek.
+**Goal.** Measure the speed of adaptation without interpreting any parameter.
 
-**Hangi veri.** A'nın fit edilmiş modelleri.
+**Data.** A's fitted models.
 
-**Yöntem.** Adım k'de fit edilen modeli adım j'nin verisinde test et. Bütün
-çiftler için yap. On adım varsa 10 x 10'luk bir kayıp matrisi çıkıyor.
-Köşegenden uzaklaştıkça bozulmanın hızı, politikanın ne kadar hızlı
-değiştiğini veriyor.
+**Method.** Test the model fitted at step k on step j's data. Do it for all
+pairs. With ten steps this gives a 10 x 10 loss matrix. The rate of
+degradation away from the diagonal gives how fast the policy changes.
 
-**Çıktı.** Kişi başına bir matris ve ondan türeyen tek bir kayma hızı sayısı.
+**Output.** One matrix per person and a single drift-rate number derived from it.
 
-**Neden model gerekli.** Fonksiyonel form varsayımı yok. "Gain arttı mı"
-tartışmasına girmeden politikanın değiştiğini gösteriyor.
+**Why a model is needed.** No functional-form assumption. It shows the
+policy changed without getting into a "did the gain go up" debate.
 
-**Örneklem.** Sadece gradual grup.
-
----
-
-### C. Yerçekimi adımlarına tepki
-
-**Amaç.** Yerçekimi her arttığında yaşanan bozulmayı ve toparlanmayı ölçmek.
-
-**Hangi veri.** `trial_summary` performans metrikleri, A'nın gecikme çıktısı,
-`gravity_step_index`, `trial_index_in_step`. Başarı ölçütü kayıttan gelmiyor,
-`fall_event` üstünden kendimiz tanımlıyoruz (pilottaki gibi: düşüş sayısı ve
-`falls_angle_per_trial`).
-
-**Rev 2'deki sorun ortadan kalktı.** Ludolph'ta yerçekimi başarılı bir
-trial'dan sonra artıyor, yani adım rastgele gelmiyor, iyi performansın ardından
-geliyor. Adım sonrası düşüşün ne kadarı yerçekiminden ne kadarı regression to
-the mean'den, ayrılmıyor. Ludolph bunu ele almamış ve rev 2'de bunu düzeltmek
-için sabit grubu kontrol olarak kullanmayı planlamıştım. Bu tasarımda artış
-sabit takvimle olduğu için sorun yok: adım, performanstan bağımsız olarak
-her sekiz trial'da bir geliyor. Adım sonrası bozulma doğrudan yorumlanabilir.
-
-**Yöntem.** Ludolph'un tanımı doğrudan uygulanabiliyor. Her adım için ilk üç
-trial (`trial_index_in_step` 1-3) ve son üç trial (6-8) ortalanıyor. Adım içi
-iyileşme son üçlü eksi ilk üçlü, adımlar arası bozulma bir sonraki adımın ilk
-üçlüsü eksi bu adımın son üçlüsü. Aynı hesap trial uzunluğu, action timing ve
-action variability için ayrı ayrı yapılıyor.
-
-Adım başına trial sayısı az olduğu için tek tek adım fitleri gürültülü olur.
-Hierarchical model kullanılacak, yani her adımın eğrisi kişinin ve grubun
-ortalamasından ödünç alıyor.
-
-**Çıktı.** Her (kişi × adım) için bozulmanın büyüklüğü ve toparlanma zaman
-sabiti.
-
-**Asıl soru.** Zaman sabiti adımlar ilerledikçe küçülüyor mu. Yani kişi sadece
-görevi değil, uyum sağlamayı da öğreniyor mu.
-
-**Güç konusunda dürüst olalım, ve aritmetik değişti.** Ludolph'ta kişi başına
-25 adım vardı ve her adım 0.1 m/s². Bizde 10 adım var ve her adım 0.25 m/s².
-İki değişiklik ters yönde çalışıyor: adımlar iki buçuk kat büyüdüğü için adım
-başına beklenen etki büyüyor, ama ortalanacak adım sayısı yarıdan aza indi.
-Ludolph'un kendi verisinde tek tek adımların etkisi gürültülüydü ve sadece
-ortalamada anlamlı çıkıyordu, hatta variability etkisi için ilk üç adımı atmak
-zorunda kalmışlardı. Bizde adımların büyük olması bunu kolaylaştırabilir ama
-10 adım üstünden ortalama almak, 25 adım üstünden ortalama almaktan daha
-gürültülüdür. Net etkinin yönü belli değil, simülasyonla bakılacak.
-
-Doğru ifade şu: tekrarlı within-subject olaylar mixed model'e iki noktanın
-farkından çok daha fazla dayanak veriyor. Ama bunlara bağımsız tekrarmış gibi
-davranan bir analiz yanlış olur.
-
-**Örneklem.** Gradual grup. Kontrol grubu bu analizde yok, çünkü onda adım yok.
-
-**Motor aftereffect ayrı bir madde değil, C'nin devamı.** Aşama 8 g = 1.0'da ve
-aftereffect ilk trial'larda en büyük, sonrakilerde sönüyor. Yani 8 tek bir
-ortalama değil, bir sönme eğrisi ve C'nin adım içi toparlanma eğrisiyle aynı
-matematiksel biçimde. Aynı hierarchical modelle fit edilecek, tek fark
-perturbasyonun işareti. Karşılaştırma noktası aşama 2, düzeltme kontrol
-grubunun aynı iki noktası.
+**Sample.** Gradual group only.
 
 ---
 
-### D. Occlusion hatasının ayrıştırılması ve içsel yerçekimi
+### C. Response to gravity steps
 
-**Amaç.** Occlusion testindeki hatanın neden değiştiğini bulmak, ve kişinin
-kafasındaki yerçekimini bir sayıya çevirmek.
+**Goal.** Measure the degradation each time gravity increases, and the recovery.
 
-**Hangi veri.** `occlusion_responses.csv`, özellikle `onset_` kolonları ve
-`stimulus_gravity`. `occlusion_stimuli.csv` varsa gözlem fazı da modellenebilir.
+**Data.** `trial_summary` performance metrics, A's delay output,
+`gravity_step_index`, `trial_index_in_step`. The success measure does not
+come from the recording; we define it ourselves from `fall_event` (as in the
+pilot: fall count and `falls_angle_per_trial`).
 
-Occlusion testi ayrı bir blok. Denek oynamıyor, başkalarının kayıtlarını
-izliyor, uyaranlar herkeste ortak. İkisi de analiz açısından iyi haber: kişinin
-kendi davranışı doğru cevabı etkilemiyor, ve kişiler arası karşılaştırma aynı
-uyaranlar üstünden yapılıyor.
+**The rev 2 problem is gone.** In Ludolph, gravity rises after a successful
+trial, so a step does not arrive at random; it follows good performance. How
+much of the post-step drop comes from gravity and how much from regression to
+the mean cannot be separated. Ludolph did not address this, and in rev 2 I
+planned to use the constant group as a control to correct it. In this design
+the increase follows a fixed schedule, so there is no problem: a step comes
+every eight trials, independent of performance. The post-step degradation can
+be interpreted directly.
 
-**Yöntem.** Her deneme için:
+**Method.** Ludolph's definition applies directly. For each step, the first
+three trials (`trial_index_in_step` 1-3) and the last three (6-8) are
+averaged. Within-step improvement is last three minus first three; between-step
+degradation is the next step's first three minus this step's last three. The
+same computation is done separately for trial length, action timing and
+action variability.
 
-1. Uyaranın gizlenme anındaki durumundan başla.
-2. Varsayılan bir yerçekimi değeriyle, sıfır kuvvet altında, occlusion süresi
-   kadar ileri simüle et. Bu bizim `src/physics.py` içindeki RK4 ile birebir
-   aynı hesap.
-3. Elde edilen açıyı en yakın yanıt seçeneğine yuvarla.
-4. Gözlenen cevapla karşılaştır.
+Since there are few trials per step, single-step fits will be noisy. A
+hierarchical model will be used, so each step's curve borrows from the
+person's and the group's mean.
 
-İki serbest parametre maximum likelihood ile bulunuyor: kişinin varsaydığı
-yerçekimi, ve cevabındaki gürültünün büyüklüğü. Occlusion sırasında kuvvet
-sıfır olduğu için sonuç sadece başlangıç durumunun ve yerçekiminin fonksiyonu.
-Parametreyi tanımlanabilir kılan şey bu.
+**Output.** For each (person × step): size of the degradation and recovery
+time constant.
 
-**Neden model gerekli.** Ortalama hata tek sayıdır ve iki farklı şeyi
-karıştırır. Bias küçüldüyse kişi sistemin fiziğini öğrenmiştir. Sadece gürültü
-küçüldüyse kişi göreve alışmıştır ama iç modeli değişmemiştir. İkisi de aynı
-ortalama hata düşüşünü üretir.
+**The real question.** Does the time constant shrink as steps go on? That is,
+does the person learn not just the task but also how to adapt?
 
-**Asıl kısıt, rev 3'ün en önemli maddesi.** Kişi başına 2 blok x 40 = 80
-occlusion denemesi var. Ludolph 11 blok x 40 = 440 kullanmış ve bulduğu grup
-farkı 5.3 derece, yanıt çözünürlüğü ise 10.8 derece. Yani etki yarım seçenek
-adımı büyüklüğünde ve ancak çok sayıda deneme üstünden ortalanınca görünür hale
-geliyor. Bizde blok başına 40 deneme aynı ama blok sayısı beşte bir.
+**Let's be honest about power, and the arithmetic changed.** Ludolph had 25
+steps per person, each 0.1 m/s². We have 10 steps, each 0.25 m/s². The two
+changes work in opposite directions: steps are two and a half times larger,
+so the expected effect per step grows, but the number of steps to average
+over dropped by more than half. In Ludolph's own data single-step effects were
+noisy and only significant on average; for the variability effect they even
+had to drop the first three steps. Larger steps may make this easier for us,
+but averaging over 10 steps is noisier than averaging over 25. The direction
+of the net effect is unclear; simulation will tell.
 
-Bu, D'yi tamamen öldürmez ama ölçeğini belirler. Üç senaryo var ve hangisinin
-geçerli olduğunu simülasyon söyleyecek:
+The correct statement: repeated within-subject events give a mixed model far
+more support than the difference of two points. But an analysis that treats
+them as independent repetitions would be wrong.
 
-| Senaryo | Ne yapılabilir |
+**Sample.** Gradual group. The control group is not in this analysis, since
+it has no steps.
+
+**The motor aftereffect is not a separate item; it continues C.** Phase 8 is
+at g = 1.0, and the aftereffect is largest in the first trials and decays
+after. So phase 8 is not a single mean but a decay curve, with the same
+mathematical form as C's within-step recovery curve. It will be fitted with
+the same hierarchical model; the only difference is the sign of the
+perturbation. The comparison point is phase 2; the correction is the control
+group's same two points.
+
+---
+
+### D. Decomposing the occlusion error and internal gravity
+
+**Goal.** Find out why the error in the occlusion test changes, and turn the
+gravity in the person's head into a number.
+
+**Data.** `occlusion_responses.csv`, especially the `onset_` columns and
+`stimulus_gravity`. If `occlusion_stimuli.csv` is available, the observation
+phase can be modelled too.
+
+The occlusion test is a separate block. The participant does not play; they
+watch other people's recordings, and stimuli are shared by everyone. Both are
+good news for the analysis: the person's own behaviour does not affect the
+correct answer, and people are compared on the same stimuli.
+
+**Method.** For each trial:
+
+1. Start from the stimulus state at the moment of occlusion.
+2. Simulate forward for the occlusion duration with an assumed gravity value,
+   under zero force. This is exactly the same computation as the RK4 in our
+   `src/physics.py`.
+3. Round the resulting angle to the nearest response option.
+4. Compare with the observed answer.
+
+Two free parameters are found by maximum likelihood: the gravity the person
+assumes, and the size of the noise in their answer. Since the force is zero
+during occlusion, the outcome is only a function of the initial state and
+gravity. That is what makes the parameter identifiable.
+
+**Why a model is needed.** The mean error is a single number and mixes two
+different things. If the bias shrank, the person learned the system's
+physics. If only the noise shrank, the person got used to the task but their
+internal model did not change. Both produce the same drop in mean error.
+
+**The main constraint, the most important item of rev 3.** There are 2 blocks
+x 40 = 80 occlusion trials per person. Ludolph used 11 blocks x 40 = 440, and
+the group difference he found was 5.3 degrees, while the response resolution
+is 10.8 degrees. So the effect is half a response step in size and only
+becomes visible when averaged over many trials. We have the same 40 trials
+per block but one fifth of the blocks.
+
+This does not kill D entirely, but it sets its scale. There are three
+scenarios, and simulation will say which holds:
+
+| Scenario | What can be done |
 |---|---|
-| 40 deneme kişi başına parametre için yeterli | D ve E tam haliyle yapılır |
-| 40 yetmez ama 80 yeter | Parametre kişi başına tek sefer (iki blok birleştirilerek) tahmin edilir. Pre-post değişimi kişi düzeyinde ölçülemez, sadece grup düzeyinde |
-| 80 de yetmez | Parametre yalnızca grup düzeyinde hierarchical modelle tahmin edilir. E analizi düşer |
+| 40 trials are enough for a per-person parameter | D and E are done in full |
+| 40 are not enough but 80 are | The parameter is estimated once per person (merging the two blocks). Pre-post change cannot be measured at person level, only at group level |
+| 80 are not enough either | The parameter is estimated only at group level with a hierarchical model. Analysis E is dropped |
 
-İki parametrenin birbirine karışma riski de burada: çok gürültülü bir kişinin
-cevapları dağıldığı için sanki küçük bir yerçekimi varsayıyormuş gibi
-görünebilir. Likelihood yüzeyinin bu ikisini gerçekten ayırıp ayırmadığı aynı
-simülasyonla kontrol edilecek.
+The risk of the two parameters getting confused is here too: the answers of a
+very noisy person are spread out, which can look as if they assume a small
+gravity. Whether the likelihood surface really separates the two will be
+checked with the same simulation.
 
-**Uyaranların yerçekimi: karar verildi ve lehimize.** Bütün uyaranlar pilotun
-no-noise trial'larından kesiliyor, hepsi g = 1.0. Yani test dünyası kontrol
-grubunun dünyası. Uyaranlar 3.5'ten kesilseydi confound hipotezin lehine
-çalışırdı, çünkü beklediğimiz sonuç gradual grubun kayması ve o grup teste
-yakın yaşamış olurdu. Bu haliyle tersi: gradual grup uzaklaşan taraf, bulunacak
-etki ev sahibi avantajına rağmen bulunmuş oluyor.
+**Gravity of the stimuli: decided, and in our favour.** All stimuli are cut
+from the pilot's no-noise trials, all at g = 1.0. So the test world is the
+control group's world. Had the stimuli been cut from 3.5, the confound would
+work in favour of the hypothesis, because the expected result is a shift in
+the gradual group and that group would have lived close to the test. As it
+is, the opposite: the gradual group is the side moving away, so any effect is
+found despite a home advantage for the other group.
 
-Tek bir yerçekiminde kalmak içsel yerçekimi tahminini engellemiyor. Uyaranlar
-farklı başlangıç açısı ve hızıyla başlıyor ve o çeşitlilik parametreyi
-belirlemeye yetiyor. Kaybettiğimiz şey, kişinin iç modelinin bütün aralıkta mı
-yoksa sadece bir noktada mı doğru olduğunu görebilmek. Bu, aralığa yayılmış
-uyaranlarla mümkün olurdu ama tasarım kararı verildi.
+Staying at a single gravity does not prevent estimating internal gravity.
+Stimuli start from different initial angles and velocities, and that variety
+is enough to determine the parameter. What we lose is seeing whether the
+person's internal model is right across the whole range or only at one point.
+That would be possible with stimuli spread over the range, but the design
+decision has been made.
 
-**Yorumun yönü ters döndü, bu yazılırken unutulmamalı.** İki grup da düşük
-yerçekiminde test ediliyor, gradual grup ise yüksek yerçekimine uyum sağlamış
-halde geliyor. İç modeli yükselen kişi g = 1.0'daki düşüşü olduğundan hızlı
-tahmin eder. Yani gradual grupta beklenen şey "daha isabetli tahmin" değil,
-"yukarı kaymış tahmin". Bu algısal bir aftereffect.
+**The direction of interpretation is reversed; don't forget this when
+writing.** Both groups are tested at low gravity, and the gradual group
+arrives adapted to high gravity. A person whose internal model went up will
+predict the fall at g = 1.0 as faster than it is. So what is expected in the
+gradual group is not "more accurate prediction" but "prediction shifted
+upward". That is a perceptual aftereffect.
 
-Burada bir tuzak var. Ludolph'ta herkes düşüşü sistematik olarak az tahmin
-ediyor, ortalama hata negatif. İç modelin yukarı kayması hatayı pozitif yöne,
-yani sıfıra doğru iter. Göreve alışıp gerçekten iyileşmek de aynı yöne iter.
-Ortalama hataya bakarak ikisi ayrılmıyor. Ayrılmalarının tek yolu iki
-parametreli fit: içsel yerçekimi 1.0'ın altından 1.0'a gelirse bu iyileşme,
-1.0'ı geçip yukarı çıkarsa bu aftereffect. D'nin model kurma gerekçesi asıl
-burada.
+There is a trap here. In Ludolph everyone systematically underestimates the
+fall; the mean error is negative. An upward shift of the internal model
+pushes the error in the positive direction, i.e. toward zero. Getting used to
+the task and truly improving pushes the same way. They cannot be separated by
+looking at the mean error. The only way to separate them is the
+two-parameter fit: if internal gravity comes up from below 1.0 to 1.0, that
+is improvement; if it passes 1.0 and goes higher, that is an aftereffect.
+This is the real reason D builds a model.
 
-**Çıktı.** Her (kişi × blok) için iki sayı: içsel yerçekimi ve tepki gürültüsü.
-Asıl ilgilendiğim büyüklük ikisi arasındaki fark, yani pre'den post'a değişim.
+**Output.** For each (person × block): two numbers, internal gravity and
+response noise. The quantity I care most about is the difference between
+them, i.e. the change from pre to post.
 
-**Not.** Ludolph aynı iskeleti farklı parametrelendirmiş. Yerçekimini manipüle
-edemediği için "iç model kaç milisaniye doğru kalıyor" parametresini fit etmiş.
-Aynı iskeletle o da fit edilip karşılaştırılabilir.
-
----
-
-### E. İki bağımsız içsel yerçekimi ölçümünün karşılaştırılması
-
-**Amaç.** Kişinin kafasındaki yerçekimi iki ayrı yerden ölçülüyor. Aynı
-çıkıyorlar mı.
-
-**Hangi veri.** D'nin çıktısı (algısal ölçüm) ve A ile mevcut action timing
-kodundan türetilen motor ölçüm.
-
-**Neden bu en iddialı madde.** İki ölçüm birbirinden tamamen bağımsız. Biri
-algısal bir görevden, diğeri motor davranıştan geliyor. Kişiler arasında
-birbirini tutuyorlarsa, motor öğrenmeyle algısal iç modelin aynı temsili
-paylaştığını göstermiş oluyoruz. Ludolph bunu tartışıyor ama gösteremiyor,
-çünkü iki deneyi ayrı yürütmüş ve motor grubu 335 gün önce eğitilmiş.
-
-**Üç zayıflık, üçü de baştan kabul edilmeli.**
-
-Motor taraftaki yerçekimi tahmini iyi tanımlı değil. Kişinin erken kuvvet
-uygulaması ya iyi bir iç modelden gelir ya da temkinli olmasından. Yani motor
-ölçüm, politikanın ne kadar agresif olduğuyla karışıyor. Bu, algısal taraf için
-geçerli değil, orada kişinin davranışı doğru cevabı etkilemiyor.
-
-İki ölçüm de gürültülüyse aralarındaki korelasyon sönümlenir. İki eksende de
-gürültü varken, gerçek ilişki büyük olmadıkça bulunamaz. Ve null sonuç hiçbir
-şey söylemez, çünkü "ilişki yok" ile "ölçemedim" ayrılmaz.
-
-Üçüncüsü rev 3'te eklendi: algısal ölçümün dayandığı deneme sayısı Ludolph'un
-beşte biri. D'nin senaryo tablosunda üçüncü satır çıkarsa E kendiliğinden
-düşer.
-
-**Tasarımın kaçırdığı fırsat.** İki aftereffect'in aynı temsili paylaştığını
-göstermenin en doğrudan yolu, ikisinin birlikte sönüp sönmediğine bakmaktı.
-Bunun için washout'tan sonra kısa bir prediction bloğu daha gerekirdi. Şu anki
-tasarımda yok, yani soruyu kişi içi bir kontrastla soramıyoruz ve E'nin zayıf
-yoluna, kişiler arası korelasyona mahkumuz. Bu, E'nin raporda ne kadar iddialı
-yazılabileceğinin sınırını belirliyor.
-
-**Güvenilirlik kapısı.** E çalıştırılmadan önce iki ölçümün de split-half
-güvenilirliği hesaplanacak. Güvenilirlik düşükse E yapılmayacak ve rapor
-edilmeyecek. Bu bir ön koşul, sonradan bulunacak bir bahane değil. Güvenilirlik
-yeterliyse korelasyon sönümlenmeye göre düzeltilerek raporlanacak.
-
-**Risk yönetimi.** E tutmazsa diğer altı analiz etkilenmiyor, hepsi kendi
-başına ayakta.
+**Note.** Ludolph parametrized the same skeleton differently. Since he could
+not manipulate gravity, he fitted a "how many milliseconds does the internal
+model stay accurate" parameter. That can also be fitted with the same
+skeleton and compared.
 
 ---
 
-### F. Öğrenme eğrileri
+### E. Comparing two independent measures of internal gravity
 
-**Amaç.** Öğrenmeyi iki noktanın farkı yerine eğri olarak ölçmek.
+**Goal.** The gravity in the person's head is measured in two separate
+places. Do they agree?
 
-**Hangi veri.** `trial_summary`, trial sırasına göre.
+**Data.** D's output (perceptual measure) and the motor measure derived from
+A and the existing action timing code.
 
-**Yöntem.** Kişi başına üstel ya da güç yasası eğrisi, hierarchical model
-içinde.
+**Why this is the most ambitious item.** The two measures are fully
+independent. One comes from a perceptual task, the other from motor
+behaviour. If they agree across people, we have shown that motor learning and
+the perceptual internal model share the same representation. Ludolph
+discusses this but cannot show it, because he ran the two experiments
+separately and the motor group had been trained 335 days earlier.
 
-**Çıktı.** Kişi başına üç parametre: başlangıç seviyesi, öğrenme hızı,
-asimptot. Grup farkı ortalamada değil bu parametrelerde aranıyor.
+**Three weaknesses, all to be accepted up front.**
 
-**Neden model gerekli.** İki kişi aynı son performansa farklı yollardan
-varabilir. Biri hızlı öğrenip platoya oturur, diğeri yavaş ama sürekli ilerler.
-Ortalama eğri ikisini aynı gösterir. Ayrıca eğri parametresi, öncesi-sonrası
-farkından daha az gürültülü bir sayı.
+The gravity estimate on the motor side is not well defined. A person applying
+force early comes either from a good internal model or from being cautious.
+So the motor measure is confounded with how aggressive the policy is. This
+does not apply to the perceptual side, where the person's behaviour does not
+affect the correct answer.
 
-**Uyarı, rev 3'te kolaylaştı.** Gradual grupta yerçekimi zamanla arttığı için
-ham performans eğrisi öğrenme ile artan zorluğun toplamı. İki etki ayrılmadan
-grup karşılaştırması yapılamaz. Ludolph bunu normalize ederek çözmüş. Bizde
-yerçekimi bilinen, sabit ve bütün katılımcılarda aynı bir zaman fonksiyonu
-olduğu için modele açık bir terim olarak konması doğrudan mümkün. Ludolph'ta
-her kişinin kendi yerçekimi profili vardı, bizde tek bir profil var.
+If both measures are noisy, the correlation between them is attenuated. With
+noise on both axes, the true relationship cannot be found unless it is large.
+And a null result says nothing, because "no relationship" and "could not
+measure it" cannot be told apart.
 
----
+The third was added in rev 3: the perceptual measure rests on one fifth of
+Ludolph's trial count. If the third row of D's scenario table holds, E drops
+out automatically.
 
-### G. Değişkenlik ayrıştırması
+**An opportunity the design missed.** The most direct way to show that the
+two aftereffects share one representation would have been to see whether
+they decay together. That would have needed another short prediction block
+after washout. The current design does not have it, so we cannot ask the
+question with a within-person contrast and are left with E's weak route,
+between-person correlation. This limits how strongly E can be written up.
 
-**Amaç.** Motor variability'yi ham standart sapmadan daha temiz ölçmek.
+**Reliability gate.** Before E is run, the split-half reliability of both
+measures will be computed. If reliability is low, E will not be done and
+will not be reported. This is a precondition, not an excuse found
+afterwards. If reliability is sufficient, the correlation will be reported
+corrected for attenuation. (Candidate implementation: `src/reliability.py`,
+see `Setup/06_Reliability.md`.)
 
-**Hangi veri.** A'nın artıkları.
-
-**Yöntem.** Input varyansını üçe ayır: state'in açıkladığı kısım, bağlamın
-açıkladığı kısım, artık. Artık kısım motor gürültü.
-
-**Neden model gerekli.** Ham değişkenlik, kişinin ne kadar zorlandığıyla
-karışıyor. Zor durumda herkes çok hareket eder. Modelin açıkladığı kısmı
-çıkardıktan sonra kalan, gerçekten gürültü olan kısım.
-
-**İkincil soru, keşifsel.** Erken adımlardaki artık değişkenlik, o kişinin
-sonraki öğrenme hızını yorduyor mu. Wu ve arkadaşlarının 2014 iddiası bu. Ama
-iki gürültülü kişi düzeyi tahmini arasında korelasyon arıyoruz ve üçüncü
-değişken riski yüksek: beceri, motivasyon, uyanıklık. Bir şey çıkarsa iddia
-olarak değil, gözlem olarak yazılacak.
-
-**Bağlı istek.** `stick_raw`. Deadzone küçük hareketleri sildiği için mevcut
-kolonlarla bu analiz yapılamıyor.
-
----
-
-## Veri gelmeden yapılacak iş: simülasyonla güç hesabı
-
-Rev 2'de bu "yapılsa iyi olur" işiydi. Rev 3'te D ve E'nin yapılıp
-yapılamayacağını belirleyen ön koşul. Deneme sayısı artık belli ve az.
-
-Fizik kodu elimizde. Yapılacak iş:
-
-1. Ludolph'unkine benzer bir uyaran kümesi üret, başlangıç açısı ve hızı
-   çeşitli olsun. Uyaran yerçekimi için iki senaryo kur: hepsi 3.5, ve aralığa
-   yayılmış.
-2. Bilinen bir içsel yerçekimi ve bilinen bir tepki gürültüsüyle sahte
-   katılımcılar üret.
-3. Bu sahte veriden parametreleri geri tahmin et.
-4. Deneme sayısını 20, 40, 80 ve 440'ta ayrı ayrı dene.
-
-Çıktı üç şey. Kişi başına parametre tahmininin 40 ve 80 denemede ne kadar
-hassas olduğu, iki parametrenin birbirine karışıp karışmadığı, ve uyaranların
-aralığa yayılmasının tahmini ne kadar iyileştirdiği. Üçü de ekibe verilebilecek
-somut sayılar ve üçü de D'nin senaryo tablosundan hangisinin geçerli olduğunu
-söylüyor.
-
-Aynı simülasyon C için de kurulacak: 10 adım x 0.25 ile 25 adım x 0.1'in adım
-etkisini yakalama gücü karşılaştırılacak.
+**Risk management.** If E fails, the other six analyses are unaffected; each
+stands on its own.
 
 ---
 
-## Hangi kolon hangi analiz için
+### F. Learning curves
 
-| Kolon | Analizler | Olmazsa ne olur |
+**Goal.** Measure learning as a curve instead of a difference of two points.
+
+**Data.** `trial_summary`, by trial order.
+
+**Method.** An exponential or power-law curve per person, within a
+hierarchical model.
+
+**Output.** Three parameters per person: initial level, learning rate,
+asymptote. Group differences are looked for in these parameters, not in the mean.
+
+**Why a model is needed.** Two people can reach the same final performance by
+different routes. One learns fast and plateaus, the other improves slowly but
+steadily. The mean curve shows them as the same. Also, a curve parameter is a
+less noisy number than a before-after difference.
+
+**Caveat, eased in rev 3.** In the gradual group gravity increases over time,
+so the raw performance curve is the sum of learning and increasing
+difficulty. Without separating the two, groups cannot be compared. Ludolph
+solved this by normalizing. In our design gravity is a known, fixed function
+of time that is the same for all participants, so it can go into the model
+directly as an explicit term. In Ludolph each person had their own gravity
+profile; we have a single profile.
+
+---
+
+### G. Variability decomposition
+
+**Goal.** Measure motor variability more cleanly than the raw standard deviation.
+
+**Data.** A's residuals.
+
+**Method.** Split input variance into three: the part explained by the
+state, the part explained by the context, and the residual. The residual is
+motor noise.
+
+**Why a model is needed.** Raw variability is confounded with how hard the
+person is struggling. In a hard situation everyone moves a lot. What remains
+after removing the part the model explains is the part that is really noise.
+
+**Secondary question, exploratory.** Does residual variability in early steps
+predict that person's later learning rate? This is Wu and colleagues' 2014
+claim. But we are looking for a correlation between two noisy person-level
+estimates, and the third-variable risk is high: skill, motivation,
+alertness. If something shows up, it will be written as an observation, not a
+claim.
+
+**Related request.** `stick_raw`. The deadzone erases small movements, so this
+analysis cannot be done with the existing columns.
+
+---
+
+## Work to do before data arrives: simulation-based power analysis
+
+In rev 2 this was "nice to have". In rev 3 it is the precondition that
+decides whether D and E can be done. The trial count is now known, and it is small.
+
+We have the physics code. The work:
+
+1. Generate a stimulus set similar to Ludolph's, with varied initial angles
+   and velocities. Set up two scenarios for stimulus gravity: all at 3.5, and
+   spread over the range.
+2. Generate fake participants with a known internal gravity and a known
+   response noise.
+3. Recover the parameters from this fake data.
+4. Try trial counts of 20, 40, 80 and 440 separately.
+
+Three outputs. How precise the per-person parameter estimate is at 40 and 80
+trials, whether the two parameters get confused, and how much spreading the
+stimuli over the range improves the estimate. All three are concrete numbers
+that can go to the team, and all three say which row of D's scenario table holds.
+
+The same simulation will be set up for C: compare the power to detect the
+step effect with 10 steps x 0.25 versus 25 steps x 0.1.
+
+---
+
+## Which column for which analysis
+
+| Column | Analyses | What happens without it |
 |---|---|---|
-| `gravity` (trial_summary) | A, B, C, F | Politikanın hangi yerçekiminde ölçüldüğü bilinmez. Öğrenme ile artan zorluk ayrılamaz |
-| `phase_label` | A, C, D, F | Hangi trial'ın hangi aşamaya ait olduğu bilinmez. Sekiz aşama birbirinden ayrılamaz |
-| `stick_raw` | A, B, E, G | Küçük hareketler kayıp. G tamamen ölür, A zayıflar |
-| `log_schema_version` | hepsi | Toplama sırasında format değişirse fark edilmez |
-| `occlusion_responses.csv` | D, E | Prediction ölçümü hiç yapılamaz |
-| `frame_time_s`, `render_frame_count` | A, E | Gecikme tahmini yanlı olur ve ne kadar olduğu bilinemez |
-| `gravity_step_index` | A, B, C | Adım birimi elle yeniden kurulur, hata payı girer |
-| `trial_index_in_step` | C | Early/late ayrımı elle kurulur, C'nin ana hesabı bu ayrıma dayanıyor |
-| `gravity_current` (timeseries) | doğrulama | Trial düzeyi yerçekimi yanlış yazılırsa yakalanamaz |
-| `session_time_s` | C, D | Dengeleme ve occlusion tek zaman çizgisine dizilemez. Aşama 6 ile 7 arasındaki süre bilinemez |
-| `probe_config` | D | Seçeneklerin eşit aralıklı olduğu varsayılmak zorunda kalınır |
-| `input_pipeline` | A, G | `stick_raw` ile uygulanan değer arasındaki dönüşüm yeniden üretilemez |
-| `occlusion_stimuli.csv` | D | Gözlem fazı modellenemez. Az deneme sayısında bu ek bilgi değerli |
+| `gravity` (trial_summary) | A, B, C, F | It is unknown at which gravity the policy was measured. Learning and increasing difficulty cannot be separated |
+| `phase_label` | A, C, D, F | It is unknown which trial belongs to which phase. The eight phases cannot be separated |
+| `stick_raw` | A, B, E, G | Small movements are lost. G dies completely, A weakens |
+| `log_schema_version` | all | A format change during collection goes unnoticed |
+| `occlusion_responses.csv` | D, E | The prediction measure cannot be done at all |
+| `frame_time_s`, `render_frame_count` | A, E | The delay estimate is biased and by how much is unknown |
+| `gravity_step_index` | A, B, C | The step unit is rebuilt by hand, with room for error |
+| `trial_index_in_step` | C | The early/late split is built by hand; C's main computation rests on it |
+| `gravity_current` (timeseries) | validation | A wrongly written trial-level gravity cannot be caught |
+| `session_time_s` | C, D | Balancing and occlusion cannot be put on one timeline. The time between phases 6 and 7 is unknown |
+| `probe_config` | D | It has to be assumed that options are evenly spaced |
+| `input_pipeline` | A, G | The transformation between `stick_raw` and the applied value cannot be reproduced |
+| `occlusion_stimuli.csv` | D | The observation phase cannot be modelled. With few trials this extra information is valuable |
 
 ---
 
-## Sıra
+## Order
 
-1. Simülasyonla güç hesabı. Veri beklemez, bu hafta yapılabilir ve D ile E'nin
-   kaderini belirliyor.
-2. A, çünkü B, E ve G onun üstüne kuruluyor.
-3. F ve C, birbirinden bağımsız, veri gelir gelmez yapılabilir.
-4. D, occlusion dosyaları gelince. A'ya bağlı değil.
-5. B, A bittikten sonra.
-6. G, A'nın artıkları hazır olunca.
-7. E en son, ve ancak güvenilirlik kapısını geçerse.
-
----
-
-## Hesap maliyeti
-
-GPU gerekmiyor.
-
-Kişi başına 115 dengeleme trial'ı, 20 saniye, 60 Hz, yani 138.000 satır.
-Katılımcı sayısı henüz belirlenmedi; 40 kişilik bir senaryoda toplam 5.5
-milyon satır, float32 parquet olarak yarım gigabaytın altı. Kişi kişi
-işlenince RAM sorunu olmuyor.
-
-Ridge fitleri milisaniye. Gecikme taraması birkaç dakika. LightGBM kişi başına
-birkaç saniye. Transfer matrisi dakikalar. Occlusion fitleri küçük veri,
-saniyeler.
-
-Asıl maliyet bootstrap. Güven aralıkları blok düzeyinde bootstrap ile
-üretiliyor ve 500 ile 1000 tekrar her şeyi o kadar çarpıyor. Çözüm, bootstrap'ı
-sadece nihai büyüklüklere uygulamak ve çekirdeklere paralelleştirmek. En kötü
-senaryo bir gece çalışan bir iş.
+1. Simulation-based power analysis. It does not wait for data, can be done
+   this week, and decides the fate of D and E.
+2. A, because B, E and G build on it.
+3. F and C, independent of each other, can be done as soon as data arrives.
+4. D, when the occlusion files arrive. Does not depend on A.
+5. B, after A is done.
+6. G, when A's residuals are ready.
+7. E last, and only if it passes the reliability gate.
 
 ---
 
-## Bu planın dışında bıraktıklarım
+## Computational cost
 
-- Koşul etiketini tahmin eden derin ağ.
-- Katılımcıları strateji kümelerine ayıran unsupervised clustering.
-- Performansı zamandan tahmin eden sequence modeli.
-- Yerçekimini state'ten decode eden model. Bu artık ayrı bir analiz değil, A'nın
-  içinde bir kontrol. Sebebi yukarıda A'da yazıyor.
+No GPU needed.
+
+Per person 115 balancing trials, 20 seconds, 60 Hz, i.e. 138,000 rows. The
+number of participants is not decided yet; in a 40-person scenario that is
+5.5 million rows in total, under half a gigabyte as float32 parquet.
+Processing person by person, RAM is not an issue.
+
+Ridge fits take milliseconds. The delay sweep a few minutes. LightGBM a few
+seconds per person. The transfer matrix minutes. Occlusion fits are small
+data, seconds.
+
+The real cost is the bootstrap. Confidence intervals come from block-level
+bootstrap, and 500 to 1000 repetitions multiply everything by that much. The
+fix is to apply the bootstrap only to final quantities and parallelize across
+cores. Worst case is an overnight job.
 
 ---
 
-## Kaynaklar
+## Left out of this plan
+
+- A deep network predicting the condition label.
+- Unsupervised clustering of participants into strategy groups.
+- A sequence model predicting performance from time.
+- A model decoding gravity from the state. This is no longer a separate
+  analysis but a control inside A. The reason is written under A above.
+
+---
+
+## References
 
 - Ludolph N, Giese MA, Ilg W (2017). Interacting Learning Processes during Skill
-  Acquisition. *Scientific Reports* 7:13191.
+  Acquisition. *Scientific Reports* 7:13191. ([[Ludolph_2017_SciRep]])
 - Ludolph N, Plöger J, Giese MA, Ilg W (2017). Motor expertise facilitates the
   accuracy of state extrapolation in perception. *PLOS ONE* 12(11):e0187666.
+  ([[Ludolph_2017_PLOSONE]])
 - Wu HG, Miyamoto YR, Gonzalez Castro LN, Ölveczky BP, Smith MA (2014). Temporal
   structure of motor variability is dynamically regulated and predicts motor
   learning ability. *Nature Neuroscience* 17:312-321.

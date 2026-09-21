@@ -1,36 +1,38 @@
-# Yöntem kayıtları
+# Method records
 
-Bu klasör "ne hesapladık ve nasıl hesapladık" sorusunun cevabını tutar. Amaç,
-aylar sonra bir sayıya bakıldığında onun nereden geldiğinin, hangi kararla
-öyle hesaplandığının ve hangi sonucu beslediğinin yazılı olması.
+This folder answers "what did we compute and how". The goal: months later,
+when someone looks at a number, it is written down where it came from, which
+decision made it so, and which result it feeds.
 
-## Kural
+## Rule
 
-Bir metrik bir karara giriyorsa buraya girer. Her kaydın içinde şunlar olmalı:
+If a metric feeds a decision, it goes here. Every record contains:
 
-1. **Tanım** — formül veya prosedür, belirsizlik bırakmayacak kadar açık
-2. **Kod referansı** — hangi dosya, hangi fonksiyon
-3. **Karar** — hangi seçenekler vardı, hangisi neden seçildi
-4. **Kanıt** — seçimi destekleyen sayı, veriden ölçülmüş hali
-5. **Neyi besliyor** — hangi notebook, hangi sonuç
+1. **Definition**: formula or procedure, clear enough to leave no ambiguity
+2. **Code reference**: which file, which function
+3. **Decision**: which options existed, which was chosen and why
+4. **Evidence**: the number that supports the choice, measured from the data
+5. **What it feeds**: which notebook, which result
 
-Literatürden aynen alınmayan her şey ayrıca işaretlenir: neden aynen
-alınamadı, yerine ne kondu.
+Anything not taken as-is from the literature is also marked: why it could not
+be taken as-is, and what replaced it.
 
-## İçindekiler
+## Contents
 
-| Dosya | Kapsam | Notebook |
+| File | Scope | Notebook |
 |---|---|---|
-| [01_Veri_Isleme.md](01_Veri_Isleme.md) | Kaynak, yükleme, QC kuralları, analiz maskesi | NB01 |
-| [02_Fizik_ve_T0.md](02_Fizik_ve_T0.md) | Cart-pole modeli, doğrulaması, T₀ | NB02 |
-| [03_Durum_Aksiyon_Episode.md](03_Durum_Aksiyon_Episode.md) | Park state/action, işaret konvansiyonu, episode ve regime run | NB02 |
-| [04_Performans_Metrikleri.md](04_Performans_Metrikleri.md) | Trial metrikleri, metrik seti seçimi | NB03 |
-| [05_Action_Timing.md](05_Action_Timing.md) | Ludolph'un event-triggered averaging'i; transfer kararları, fizibilite ve NB04 sonuçları | NB04 |
-| [06_Karar_Istatistigi.md](06_Karar_Istatistigi.md) | Test seçimi, trend kontrastları (SR testi), çoklu karşılaştırma, duyarlılık | NB06 |
+| [01_Data_Processing.md](01_Data_Processing.md) | Source, loading, QC rules, analysis mask | NB01 |
+| [02_Physics_and_T0.md](02_Physics_and_T0.md) | Cart-pole model, its validation, T₀ | NB02 |
+| [03_State_Action_Episode.md](03_State_Action_Episode.md) | Park state/action, sign convention, episode and regime run | NB02 |
+| [04_Performance_Metrics.md](04_Performance_Metrics.md) | Trial metrics, choice of metric set | NB03 |
+| [05_Action_Timing.md](05_Action_Timing.md) | Ludolph's event-triggered averaging; transfer decisions, feasibility and NB04 results | NB04 |
+| [06_Reliability.md](06_Reliability.md) | Variance decomposition, ICC, split-half reliability (`src/reliability.py`) | NB92, pilot2 NB91 |
 
-## İlgili belgeler
+## Related documents
 
-- [../Analiz_Gunlugu.md](../Analiz_Gunlugu.md) — tarihli çalışma günlüğü, ne zaman ne karara bağlandı
-- [../Pilot_Sonuc_Ozeti.md](../Pilot_Sonuc_Ozeti.md) — pilotun bulgusu, sunumun metin karşılığı
-- [../Veri_Kayit_Istekleri.md](../Veri_Kayit_Istekleri.md) — Unity ekibine iletilen kayıt formatı istekleri
-- `../../CLAUDE.md` — çalışma bağlamı ve güncel sayılar; bu klasörün özeti değil, tamamlayıcısı
+- [../Analysis_Log.md](../Analysis_Log.md): dated analysis log, what was decided when
+- [../Pilot_Noise/Decision_Statistics.md](../Pilot_Noise/Decision_Statistics.md): decision statistics of the noise study (used to live here as 06)
+- [../Pilot_Noise/Pilot1_Results_Summary.md](../Pilot_Noise/Pilot1_Results_Summary.md), [../Pilot_Noise/Pilot2_Results_Summary.md](../Pilot_Noise/Pilot2_Results_Summary.md): findings of both pilots
+- [../Pilot_Noise/Recording_Requests.md](../Pilot_Noise/Recording_Requests.md): recording requests sent to the Unity team during the noise study
+- [../GAP/01_Recording_Requests.md](../GAP/01_Recording_Requests.md): recording requests for GAP
+- `../../CLAUDE.md`: working context and current numbers; a complement to this folder, not a summary of it

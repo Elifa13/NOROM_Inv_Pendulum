@@ -1,50 +1,55 @@
-# Notebooks
+# Notebooks / pilot1
 
-Zincir sırayla çalışır; her biri bir öncekinin parquet çıktısını okur.
-Notebook'lar ince — mantık `../src/` altında.
+The chain runs in order; each notebook reads the previous one's parquet
+output. Notebooks are thin; the logic is under `../../../src/`.
 
-**İki kopya var.** Bu klasördekiler `pilot1` verisini (12 katılımcı),
-`pilot2/` altındakiler `pilot2` verisini (9 katılımcı) işler. Tek fark ilk
-hücredeki `DATASET` değişkeni; `src/` çoğaltılmadı. Aşağıdaki durum sütunu
-pilot1'e ait. Pilot2 sonuçları:
-`../../Documentation/Pilot2_Sonuc_Ozeti.md`.
+**There are two copies.** The notebooks in this folder process the `pilot1`
+data (12 participants); those under `../pilot2/` process `pilot2` (10
+participants). The only difference is the `DATASET` variable in the first
+cell; `src/` was not duplicated. The status column below is for pilot1.
+Results (from repo root): pilot1 in `Documentation/Pilot_Noise/Pilot1_Results_Summary.md`,
+pilot2 in `Documentation/Pilot_Noise/Pilot2_Results_Summary.md`.
 
-| # | Notebook | İçerik | Durum |
+| # | Notebook | Contents | Status |
 |---|---|---|---|
-| 01 | `01_load_qc.ipynb` | Drive'dan çekme, yükleme, yapısal bütünlük, zaman/sinyal kontrolleri, QC bayrakları, analiz maskesi, randomizasyon doğrulaması | çalıştı, 12 katılımcı |
-| 02 | `02_build.ipynb` | Fizik modeli doğrulaması, episode + regime run segmentasyonu, state, action sınıfları, T₀, event tespiti | çalıştı, 12 katılımcı |
-| 03 | `03_performance.ipynb` | Trial düzeyi metrikler, metrik seti seçimi, katılımcı × koşul birimine toplama | çalıştı, 12 katılımcı |
-| 04 | `04_control.ipynb` | Action timing (Ludolph), hız tabakalama, action variability, açı bandı taraması. I/CR/D/A dağılımı öncelik dışı bırakıldı | çalıştı, 12 katılımcı |
-| 05 | Learning | Pilotta varyans/güç tahmini; koşullar arası öğrenme karşılaştırması DEĞİL | **yazılmadı** |
-| 06 | `06_noise_decision.ipynb` | Friedman + Wilcoxon/Holm, lineer ve kuadratik trend kontrastları, U-şekil kontrolü, duyarlılık, aday seçimi | çalıştı, 12 katılımcı |
-| 90 | `90_sunum.ipynb` | Acil sunum. **İzole** — `presentation.py` kullanır, zincirin parçası değil, silinse zincir etkilenmez | çalıştı, 12 katılımcı |
-| 91 | `91_control_variability.ipynb` | Kontrol değişkenliği: Welch spektrumu, sample entropy, aksiyon aralıkları. **İzole** — kendi içinde tanımlı, `src/` modülü yok, zincirin parçası değil | çalıştı, koşul etkisi yok |
-| 92 | `92_varyans_ayrisimi.ipynb` | Varyans ayrışımı (kişi/koşul/artık), ICC, split-half güvenilirlik, öğrenme kontrolü. **İzole** — kendi içinde tanımlı, `src/` modülü yok, zincirin parçası değil | çalıştı, 12 katılımcı |
-| 93 | `93_ogrenme_ve_varyans.ipynb` | Trial düzeyi varyans ayrışımı (kişi/koşul/öğrenme/artık), koşul başına öğrenme eğimi ve eğimin güvenilirliği. **İzole** | çalıştı, 12 katılımcı |
+| 01 | `01_load_qc.ipynb` | Pull from Drive, loading, structural integrity, timing/signal checks, QC flags, analysis mask, randomization check | ran, 12 participants |
+| 02 | `02_build.ipynb` | Physics model validation, episode + regime run segmentation, state, action classes, T₀, event detection | ran, 12 participants |
+| 03 | `03_performance.ipynb` | Trial-level metrics, choice of metric set, aggregation to the participant × condition unit | ran, 12 participants |
+| 04 | `04_control.ipynb` | Action timing (Ludolph), velocity stratification, action variability, angle band sweep. The I/CR/D/A distribution was left out of scope | ran, 12 participants |
+| 05 | Learning | Variance/power estimate for the pilot; NOT a comparison of learning across conditions | **not written** |
+| 06 | `06_noise_decision.ipynb` | Friedman + Wilcoxon/Holm, linear and quadratic trend contrasts, U-shape check, sensitivity, candidate choice | ran, 12 participants |
+| 90 | `90_sunum.ipynb` | Emergency presentation. **Isolated**: uses `presentation.py`, not part of the chain; deleting it would not affect the chain | ran, 12 participants |
+| 91 | `91_control_variability.ipynb` | Control variability: Welch spectrum, sample entropy, action intervals. **Isolated**: self-contained, no `src/` module, not part of the chain | ran, no condition effect |
+| 92 | `92_varyans_ayrisimi.ipynb` | Variance decomposition (person/condition/residual), ICC, split-half reliability, learning check. **Isolated**: self-contained, no `src/` module, not part of the chain | ran, 12 participants |
+| 93 | `93_ogrenme_ve_varyans.ipynb` | Trial-level variance decomposition (person/condition/learning/residual), learning slope per condition and the slope's reliability. **Isolated** | ran, 12 participants |
 
-## Zincir mantığı
+## Chain logic
 
-02 var çünkü 03 ve 04 aynı türetmeyi iki kere yapmasın. 04, 05'ten önce
-çünkü learning kriteri action timing'i girdi olarak kullanıyor. (Bu gerekçe
-NB04'ten sonra kısmen geçersiz: action timing koşullar arasında ayırt edici
-çıkmadı ve karar setine girmedi.)
+02 exists so that 03 and 04 don't do the same derivation twice. 04 comes
+before 05 because the learning criterion uses action timing as input. (This
+rationale is partly void after NB04: action timing did not separate
+conditions and did not enter the decision set.)
 
-90'lı seri izole. Zincirin hiçbir parçası onları okumaz, ve onlar da sadece
-`data/interim` okur. 91 ve 92 repo kuralının (mantık `src/` altında, notebook
-ince) dışında duruyor: ikisi de keşif taraması, bir sonuçları karara girerse
-mantık `src/`'ye taşınır ve `Yontem/` altında kaydı açılır.
+The 90s series is isolated. No part of the chain reads them, and they only
+read `data/interim`. 91 and 92 sit outside the repo rule (logic under
+`src/`, notebooks thin): both are exploratory scans; if a result enters a
+decision, the logic moves to `src/` and gets a record under
+`Documentation/Setup/`. NB92's reliability functions moved to
+`src/reliability.py` this way on 2026-09-15 (record:
+`Setup/06_Reliability.md`). The NB92 here keeps using its own copy; it is frozen.
 
-Drive'dan veri çekme NB01'in ilk hücresinde (`sync_data`); yeni katılımcı
-geldiğinde o hücreyi çalıştırmak yeterli, var olan dosyalar tekrar
-indirilmez. Hangi Drive klasörünün çekileceği aktif `DATASET`'ten gelir.
+Pulling data from Drive is in NB01's first cell (`sync_data`); when a new
+participant arrives, running that cell is enough, and existing files are not
+downloaded again. Which Drive folder is pulled comes from the active `DATASET`.
 
-## Çalıştırma
+## Running
 
-Notebook'lar repo kökündeki `.venv` kernel'ini kullanıyor. Paket kurulumu
-her notebook'un ilk hücresinde `%pip install` ile — terminal pip'i farklı
-bir Python'a kurabiliyor.
+The notebooks use the `.venv` kernel at the repo root. Packages are
+installed with `%pip install` in each notebook's first cell, because
+terminal pip can install into a different Python.
 
-## Yöntem kayıtları
+## Method records
 
-Bir notebook'un neden öyle hesapladığı `../../Documentation/Yontem/`
-altında. NB03'ün metrik seti kararları ve NB04'ün action timing transfer kararları orada.
+Why a notebook computes things the way it does is under
+`Documentation/Setup/` (from repo root). NB03's metric set decisions and
+NB04's action timing transfer decisions are there.

@@ -15,7 +15,7 @@ Iki olay tablosu var, karistirilmamali:
       geciyor. Katilimci bir sey yapmasa da olur. Ludolph'un action timing
       olcumu bu olaya gore hizalaniyor.
 
-Yontem kararlari ve gerekceler: Documentation/Yontem/05_Action_Timing.md
+Yontem kararlari ve gerekceler: Documentation/Setup/05_Action_Timing.md
 
 Bu modul istatistiksel test YAPMAZ. dz ve profiller betimleyici.
 """

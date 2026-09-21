@@ -18,3 +18,6 @@ env/
 
 # Bir kerelik calisma ciktilari, repoya girmez
 Claude outputs/
+
+# Obsidian: kisisel gorunum ayarlari repoya girmez, notlar girer
+.obsidian/

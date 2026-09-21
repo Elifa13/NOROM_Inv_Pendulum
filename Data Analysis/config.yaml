@@ -18,7 +18,7 @@ datasets:
     # Referans; kod sigmayi veriden okur, buraya bakmaz. NB01 karsilastirir.
     noise_sigmas: {no_noise: 0.0, N1: 0.02, N2: 0.05, N3: 0.08, N4: 0.25}
   pilot2:
-    label: "Pilot 2 -- 9 katilimci, 2-3 Eylul 2026"
+    label: "Pilot 2 -- 10 katilimci, 2-3 ve 8 Eylul 2026"
     raw_dir: "data/pilot2/raw"
     interim_dir: "data/pilot2/interim"
     processed_dir: "data/pilot2/processed"
