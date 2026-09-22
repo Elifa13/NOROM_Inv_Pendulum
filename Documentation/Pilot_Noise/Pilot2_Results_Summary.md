@@ -113,10 +113,18 @@ amplitude, N1 dz 0.46, the others below 0.18.
 | Stabilization time | 95.6% | **0.2%** | 4.2% | 0.95 |
 | Angle-caused falls | 96.8% | **0.2%** | 3.1% | 0.96 |
 | Action timing | 63.1% | 1.3% | 35.6% | 0.55 |
+| Cart RMS | 80.3% | 1.9% | 17.8% | 0.77 |
 
-The condition share was 0.7–4.0% in pilot 1 and drops to 0.1–0.2% in pilot 2,
-as expected when the ladder narrows. (The ICC here is ICC(3,1), even though
-the code calls it ICC(2,1); see `Setup/06_Reliability.md`.)
+Across the three decision metrics the condition share was 0.7–4.0% in pilot 1
+and drops to 0.1–0.2% in pilot 2, as expected when the ladder narrows. (The
+ICC here is ICC(3,1), even though the code calls it ICC(2,1); see
+`Setup/06_Reliability.md`.)
+
+Cart RMS was added later (2026-09-22, for the HCI-E abstract), computed the
+same way on the same table. It separates people less sharply than the angle
+measures: ICC 0.77 against 0.95–0.96, with a residual share of 17.8% against
+their 3.1–4.2%. Its condition share (1.9%) is the largest in the table, but
+at that ICC the share is not evidence of a condition effect.
 
 **A personal optimum is again not measurable.** Split-half (10 trials 5+5,
 200 repetitions): the person's overall level agrees between halves

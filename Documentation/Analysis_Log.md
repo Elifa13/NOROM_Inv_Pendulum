@@ -8,6 +8,30 @@ answer and that day's rationale can be found. Method details are under
 
 ---
 
+## 2026-09-22: Cart RMS ICC computed for the HCI-E abstract
+
+The HCI-E abstract needed a reliability number for cart RMS, so `decompose`
+/ `cell_table` from `src/reliability.py` were run on pilot2
+`participant_condition.parquet`, column `cart_rms_m`, exactly as NB92 does
+(5 noise conditions, n = 10). Result: person 80.3%, condition 1.9%,
+residual 17.8%, **ICC 0.77**. As noted in `Setup/06_Reliability.md` this is
+ICC(3,1), not the ICC(2,1) the code's docstring claims; the abstract must
+say ICC(3,1).
+
+Checked first by re-running the same call on `mae_angle_deg`, which
+reproduced the published 96.2 / 0.1 / 3.7% and ICC 0.95 exactly, so
+`participant_condition.parquet` and NB92's own aggregation from
+`trial_metrics.parquet` agree.
+
+Cart RMS is measured less reliably than the angle metrics (ICC 0.77 vs
+0.95–0.96) and its condition share (1.9%) is the largest in the table — but
+at that ICC the share is not evidence of a condition effect, and the
+split-half reliability of cart RMS was not computed. Run as a one-off
+script; no notebook was touched (pilot notebooks are frozen). Row added to
+`Pilot_Noise/Pilot2_Results_Summary.md`.
+
+---
+
 ## 2026-09-21: Turkish file and folder names renamed to English
 
 Renamed Turkish file/folder names to English, PDFs renamed to match their
